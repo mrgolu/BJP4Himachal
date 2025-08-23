@@ -3,7 +3,7 @@ import type { NewsArticle, FeaturedMedia } from '../types';
 import { NewsCategory } from '../types';
 
 interface ManagePanelProps {
-  onCreatePost: (post: Omit<NewsArticle, 'id' | 'date'>) => void;
+  onCreatePost: (post: Omit<NewsArticle, 'id' | 'date' | 'views' | 'linkClicks'>) => void;
   onUpdatePost: (post: NewsArticle) => void;
   postToEdit?: NewsArticle | null;
   onCancel: () => void;
@@ -20,6 +20,12 @@ const ManagePanel: React.FC<ManagePanelProps> = ({ onCreatePost, onUpdatePost, p
   const [fbLink, setFbLink] = useState('');
   const [instaLink, setInstaLink] = useState('');
   const [xLink, setXLink] = useState('');
+  
+  // Hold onto original analytics data during an edit
+  const [originalAnalytics, setOriginalAnalytics] = useState({
+    views: 0,
+    linkClicks: { fb: 0, insta: 0, x: 0 },
+  });
 
   useEffect(() => {
     if (isEditMode && postToEdit) {
@@ -30,6 +36,7 @@ const ManagePanel: React.FC<ManagePanelProps> = ({ onCreatePost, onUpdatePost, p
       setFbLink(postToEdit.socials?.fb || '');
       setInstaLink(postToEdit.socials?.insta || '');
       setXLink(postToEdit.socials?.x || '');
+      setOriginalAnalytics({ views: postToEdit.views, linkClicks: postToEdit.linkClicks });
     }
   }, [isEditMode, postToEdit]);
 
@@ -82,6 +89,8 @@ const ManagePanel: React.FC<ManagePanelProps> = ({ onCreatePost, onUpdatePost, p
         ...postData,
         id: postToEdit.id,
         date: postToEdit.date,
+        views: originalAnalytics.views,
+        linkClicks: originalAnalytics.linkClicks
       });
     } else {
       onCreatePost(postData);

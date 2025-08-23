@@ -7,11 +7,17 @@ import NewsDetail from './components/NewsDetail';
 import ManagePanel from './components/ManagePanel';
 import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
+import SignIn from './components/SignIn';
 
 type View = 'feed' | 'manage' | 'detail' | 'admin';
+export type UserRole = 'admin' | 'user';
+type AuthStatus = 'unauthenticated' | UserRole;
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('feed');
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('unauthenticated');
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({
     fb: 'https://www.facebook.com/BJP4Himachal/',
     insta: 'https://www.instagram.com/bjp4himachal/',
@@ -30,6 +36,8 @@ const App: React.FC = () => {
       },
       category: NewsCategory.PARTY_ACTIVITIES,
       date: new Date().toISOString(),
+      views: 102,
+      linkClicks: { fb: 12, insta: 5, x: 9 },
       socials: {
         fb: 'https://www.facebook.com/share/r/1BJTQncNFJ/',
         insta: 'https://www.instagram.com/reel/DNnLD_8ht_Y/?igsh=M2FkbjVtdzV5Zjcy',
@@ -48,6 +56,8 @@ const App: React.FC = () => {
       },
       category: NewsCategory.STATE,
       date: new Date(Date.now() - 86400000).toISOString(),
+      views: 1543,
+      linkClicks: { fb: 0, insta: 0, x: 0 },
     },
     {
       id: '2',
@@ -61,6 +71,8 @@ const App: React.FC = () => {
       },
       category: NewsCategory.PARTY_ACTIVITIES,
       date: new Date(Date.now() - 172800000).toISOString(),
+      views: 876,
+      linkClicks: { fb: 0, insta: 0, x: 0 },
     },
   ]);
   const [selectedPost, setSelectedPost] = useState<NewsArticle | null>(null);
@@ -72,12 +84,14 @@ const App: React.FC = () => {
     setCurrentView('feed');
   };
 
-  const handleCreatePost = (newPost: Omit<NewsArticle, 'id' | 'date'>) => {
+  const handleCreatePost = (newPost: Omit<NewsArticle, 'id' | 'date' | 'views' | 'linkClicks'>) => {
     setPosts(prevPosts => [
       {
         ...newPost,
         id: new Date().getTime().toString(),
         date: new Date().toISOString(),
+        views: 0,
+        linkClicks: { fb: 0, insta: 0, x: 0 },
       },
       ...prevPosts,
     ]);
@@ -90,15 +104,31 @@ const App: React.FC = () => {
   }
 
   const handleDeletePost = (postId: string) => {
-    // Confirmation is now handled in the component that triggers the delete.
     const isViewingDeletedPost = currentView === 'detail' && selectedPost?.id === postId;
-
     setPosts(prevPosts => prevPosts.filter(p => p.id !== postId));
-    
     if (isViewingDeletedPost) {
       navigateToFeed();
     }
   };
+  
+  const handleIncrementView = (postId: string) => {
+    setPosts(posts => posts.map(p => p.id === postId ? { ...p, views: p.views + 1 } : p));
+  };
+  
+  const handleIncrementLinkClick = (postId: string, platform: 'fb' | 'insta' | 'x') => {
+      setPosts(posts => posts.map(p => {
+          if (p.id === postId) {
+              return {
+                  ...p,
+                  linkClicks: {
+                      ...p.linkClicks,
+                      [platform]: p.linkClicks[platform] + 1,
+                  }
+              }
+          }
+          return p;
+      }));
+  }
 
   const handleStartEdit = (post: NewsArticle) => {
     setEditingPost(post);
@@ -106,7 +136,8 @@ const App: React.FC = () => {
   }
 
   const handleSelectPost = (post: NewsArticle) => {
-    setSelectedPost(post);
+    handleIncrementView(post.id);
+    setSelectedPost(prev => posts.find(p => p.id === post.id) || null);
     setCurrentView('detail');
   };
   
@@ -124,7 +155,28 @@ const App: React.FC = () => {
     navigateToFeed();
   };
 
-  const renderContent = () => {
+  const handleLogin = (password: string) => {
+    if (password === 'bjp4hp') {
+      setAuthStatus('admin');
+      setLoginError(null);
+      setCurrentView('feed');
+    } else {
+      setLoginError('Incorrect password. Please try again.');
+    }
+  };
+
+  const handleLogout = () => {
+    setAuthStatus('unauthenticated');
+    setCurrentView('feed');
+  };
+
+  const handleContinueAsGuest = () => {
+    setAuthStatus('user');
+    setCurrentView('feed');
+  };
+
+  const renderContent = (userRole: UserRole) => {
+    const postForDetailView = posts.find(p => p.id === selectedPost?.id)
     switch (currentView) {
       case 'manage':
         return <ManagePanel 
@@ -134,22 +186,34 @@ const App: React.FC = () => {
             onCancel={navigateToFeed} 
         />
       case 'detail':
-        return selectedPost ? <NewsDetail post={selectedPost} onBack={navigateToFeed} onEdit={handleStartEdit} onDelete={handleDeletePost} /> : null;
+        return postForDetailView ? <NewsDetail post={postForDetailView} onBack={navigateToFeed} onEdit={handleStartEdit} onDelete={handleDeletePost} onLinkClick={handleIncrementLinkClick} userRole={userRole} /> : null;
       case 'admin':
         return <AdminPanel initialLinks={socialLinks} onSave={handleSaveSocialLinks} onCancel={navigateToFeed} />
       case 'feed':
       default:
-        return <NewsFeed posts={posts} onSelectPost={handleSelectPost} onEditPost={handleStartEdit} onDeletePost={handleDeletePost} />;
+        return <NewsFeed posts={posts} onSelectPost={handleSelectPost} onEditPost={handleStartEdit} onDeletePost={handleDeletePost} userRole={userRole} />;
     }
   };
 
+  if (authStatus === 'unauthenticated') {
+    return (
+      <SignIn
+        onAdminLogin={handleLogin}
+        onGuestContinue={handleContinueAsGuest}
+        error={loginError}
+      />
+    );
+  }
+
+  const userRole = authStatus;
+
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
-      <Header onNewPostClick={navigateToManage} onHomeClick={navigateToFeed} />
+      <Header onNewPostClick={navigateToManage} onHomeClick={navigateToFeed} userRole={userRole} onLogout={handleLogout} />
       <main className="container mx-auto p-4 md:p-8 flex-grow">
-        {renderContent()}
+        {renderContent(userRole)}
       </main>
-      <Footer links={socialLinks} onAdminClick={navigateToAdmin} />
+      <Footer links={socialLinks} onAdminClick={navigateToAdmin} userRole={userRole} />
     </div>
   );
 };

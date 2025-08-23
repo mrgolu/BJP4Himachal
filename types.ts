@@ -20,6 +20,12 @@ export interface NewsArticle {
   featuredMedia: FeaturedMedia;
   category: NewsCategory;
   date: string;
+  views: number;
+  linkClicks: {
+    fb: number;
+    insta: number;
+    x: number;
+  };
   socials?: {
     fb?: string;
     insta?: string;

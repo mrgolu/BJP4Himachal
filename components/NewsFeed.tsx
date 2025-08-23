@@ -2,15 +2,17 @@
 import React from 'react';
 import type { NewsArticle } from '../types';
 import NewsCard from './NewsCard';
+import type { UserRole } from '../App';
 
 interface NewsFeedProps {
   posts: NewsArticle[];
   onSelectPost: (post: NewsArticle) => void;
   onEditPost: (post: NewsArticle) => void;
   onDeletePost: (postId: string) => void;
+  userRole: UserRole;
 }
 
-const NewsFeed: React.FC<NewsFeedProps> = ({ posts, onSelectPost, onEditPost, onDeletePost }) => {
+const NewsFeed: React.FC<NewsFeedProps> = ({ posts, onSelectPost, onEditPost, onDeletePost, userRole }) => {
   if (posts.length === 0) {
     return (
       <div className="text-center py-16">
@@ -29,6 +31,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ posts, onSelectPost, onEditPost, on
           onSelectPost={onSelectPost}
           onEditPost={onEditPost}
           onDeletePost={onDeletePost} 
+          userRole={userRole}
         />
       ))}
     </div>
