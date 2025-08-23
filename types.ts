@@ -38,3 +38,9 @@ export interface SocialLinks {
   insta: string;
   x: string;
 }
+
+export interface Comment {
+  id: number;
+  user: 'Admin' | 'Guest';
+  text: string;
+}

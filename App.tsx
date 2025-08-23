@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { NewsArticle, SocialLinks } from './types';
+import type { NewsArticle, SocialLinks, Comment } from './types';
 import { NewsCategory } from './types';
 import Header from './components/Header';
 import NewsFeed from './components/NewsFeed';
@@ -8,8 +8,11 @@ import ManagePanel from './components/ManagePanel';
 import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
 import SignIn from './components/SignIn';
+import LiveStreamAdmin from './components/LiveStreamAdmin';
+import LiveStreamUser from './components/LiveStreamUser';
 
-type View = 'feed' | 'manage' | 'detail' | 'admin';
+
+type View = 'feed' | 'manage' | 'detail' | 'admin' | 'live-admin' | 'live-user';
 export type UserRole = 'admin' | 'user';
 type AuthStatus = 'unauthenticated' | UserRole;
 
@@ -17,6 +20,8 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('feed');
   const [authStatus, setAuthStatus] = useState<AuthStatus>('unauthenticated');
   const [loginError, setLoginError] = useState<string | null>(null);
+
+  const [liveStream, setLiveStream] = useState<{ title: string; comments: Comment[] } | null>(null);
 
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({
     fb: 'https://www.facebook.com/BJP4Himachal/',
@@ -175,9 +180,49 @@ const App: React.FC = () => {
     setCurrentView('feed');
   };
 
+  const handleStartStream = (title: string) => {
+    setLiveStream({
+      title,
+      comments: [{
+        id: Date.now(),
+        user: 'Admin',
+        text: 'Welcome to the live stream!'
+      }]
+    });
+    setCurrentView('live-admin');
+  };
+
+  const handleEndStream = () => {
+    setLiveStream(null);
+    setCurrentView('feed');
+  };
+
+  const handleAddComment = (text: string) => {
+    if (!liveStream) return;
+    const newComment: Comment = {
+      id: Date.now(),
+      user: authStatus === 'admin' ? 'Admin' : 'Guest',
+      text
+    };
+    setLiveStream(prev => prev ? { ...prev, comments: [...prev.comments, newComment] } : null);
+  };
+
   const renderContent = (userRole: UserRole) => {
     const postForDetailView = posts.find(p => p.id === selectedPost?.id)
     switch (currentView) {
+      case 'live-admin':
+        return <LiveStreamAdmin 
+                  onStreamEnd={handleEndStream} 
+                  onStreamStart={handleStartStream}
+                  comments={liveStream?.comments || []}
+                />
+      case 'live-user':
+        return liveStream ? <LiveStreamUser 
+                  title={liveStream.title} 
+                  comments={liveStream.comments}
+                  onAddComment={handleAddComment}
+                  onBack={navigateToFeed}
+                /> : null;
       case 'manage':
         return <ManagePanel 
             onCreatePost={handleCreatePost} 
@@ -191,7 +236,7 @@ const App: React.FC = () => {
         return <AdminPanel initialLinks={socialLinks} onSave={handleSaveSocialLinks} onCancel={navigateToFeed} />
       case 'feed':
       default:
-        return <NewsFeed posts={posts} onSelectPost={handleSelectPost} onEditPost={handleStartEdit} onDeletePost={handleDeletePost} userRole={userRole} />;
+        return <NewsFeed posts={posts} onSelectPost={handleSelectPost} onEditPost={handleStartEdit} onDeletePost={handleDeletePost} userRole={userRole} isLive={!!liveStream} liveTitle={liveStream?.title} onJoinLive={() => setCurrentView('live-user')} />;
     }
   };
 
@@ -209,7 +254,16 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
-      <Header onNewPostClick={navigateToManage} onHomeClick={navigateToFeed} userRole={userRole} onLogout={handleLogout} />
+      <Header 
+        onNewPostClick={navigateToManage} 
+        onHomeClick={navigateToFeed} 
+        userRole={userRole} 
+        onLogout={handleLogout} 
+        isLive={!!liveStream}
+        liveTitle={liveStream?.title}
+        onGoLive={() => setCurrentView('live-admin')}
+        onJoinLive={() => setCurrentView('live-user')}
+      />
       <main className="container mx-auto p-4 md:p-8 flex-grow">
         {renderContent(userRole)}
       </main>
