@@ -114,7 +114,7 @@ const EventCard: React.FC<{
         e.stopPropagation();
 
         // Ensure there's always a link to share, defaulting to the app's main page.
-        const eventUrl = event.link || window.location.href;
+        const eventUrl = event.link || window.location.origin;
         const linkTitle = event.link ? (event.type === MeetingType.MEETING ? 'Join Online Meeting' : 'View Activity Link') : 'View on Portal';
 
         const shareText = `*${event.type}: ${event.title}*\n\n` +
