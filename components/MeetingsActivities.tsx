@@ -71,6 +71,8 @@ const EventCard: React.FC<{
             } catch (error) {
                 console.log('Error sharing or share cancelled:', error);
             }
+        } else {
+            alert('Share functionality is not supported on this device/browser.');
         }
     };
 
@@ -83,9 +85,6 @@ const EventCard: React.FC<{
             window.location.assign(event.link);
         }
     };
-
-    const showBottomBar = event.link || typeof navigator.share !== 'undefined';
-
 
     return (
         <div 
@@ -141,7 +140,7 @@ const EventCard: React.FC<{
                 </div>
             )}
             
-            {showBottomBar && (
+            {(event.link || true) && (
                  <div className="mt-6 pt-4 border-t border-gray-200 flex items-center space-x-4">
                     {event.link && (
                         <a
@@ -156,18 +155,16 @@ const EventCard: React.FC<{
                             {event.type === MeetingType.MEETING ? 'Join Online Meeting' : 'View Activity Link'}
                         </a>
                     )}
-                    {typeof navigator.share !== 'undefined' && (
-                        <button
-                            onClick={handleShare}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange"
-                            aria-label="Share this event"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-                            </svg>
-                            Share
-                        </button>
-                    )}
+                    <button
+                        onClick={handleShare}
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange"
+                        aria-label="Share this event"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                        </svg>
+                        Share
+                    </button>
                 </div>
             )}
         </div>
