@@ -1,0 +1,5 @@
+{
+  "name": "BJP Himachal Pradesh News Portal",
+  "description": "An internal application for the BJP Himachal Pradesh team to create, manage, and post news articles to their followers. It provides a simple and efficient interface for content management.",
+  "requestFramePermissions": []
+}
