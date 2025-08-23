@@ -12,6 +12,7 @@ import LiveStreamAdmin from './components/LiveStreamAdmin';
 import LiveStreamUser from './components/LiveStreamUser';
 import MeetingsActivities from './components/MeetingsActivities';
 import ManageMeeting from './components/ManageMeeting';
+import BottomNav from './components/BottomNav';
 
 
 type View = 'feed' | 'manage' | 'detail' | 'admin' | 'live-admin' | 'live-user' | 'meetings' | 'activities' | 'manage-meeting';
@@ -296,6 +297,12 @@ const App: React.FC = () => {
     setMeetings(prev => prev.filter(m => m.id !== meetingId));
   };
 
+  const onJoinLive = () => {
+    if (liveStream) {
+        setCurrentView('live-user');
+    }
+  }
+
   const renderContent = (userRole: UserRole) => {
     const postForDetailView = posts.find(p => p.id === selectedPost?.id)
     switch (currentView) {
@@ -379,12 +386,20 @@ const App: React.FC = () => {
         isLive={!!liveStream}
         liveTitle={liveStream?.title}
         onGoLive={() => setCurrentView('live-admin')}
-        onJoinLive={() => setCurrentView('live-user')}
+        onJoinLive={onJoinLive}
       />
-      <main className="container mx-auto p-4 md:p-8 flex-grow">
+      <main className="container mx-auto p-4 md:p-8 flex-grow pb-20 md:pb-0">
         {renderContent(userRole)}
       </main>
       <Footer links={socialLinks} onAdminClick={navigateToAdmin} userRole={userRole} />
+      <BottomNav
+        currentView={currentView}
+        onHomeClick={navigateToFeed}
+        onMeetingsClick={navigateToMeetings}
+        onActivitiesClick={navigateToActivities}
+        onLiveClick={onJoinLive}
+        isLive={!!liveStream}
+      />
     </div>
   );
 };

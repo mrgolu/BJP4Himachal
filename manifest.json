@@ -1,0 +1,22 @@
+
+{
+  "name": "BJP Himachal Pradesh News Portal",
+  "short_name": "BJP HP News",
+  "description": "An internal application for the BJP Himachal Pradesh team to create, manage, and post news articles to their followers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FF9933",
+  "icons": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Bharatiya_Janata_Party_logo.svg/192px-Bharatiya_Janata_Party_logo.svg.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Bharatiya_Janata_Party_logo.svg/512px-Bharatiya_Janata_Party_logo.svg.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
