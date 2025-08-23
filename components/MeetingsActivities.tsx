@@ -3,6 +3,66 @@ import type { Meeting } from '../types';
 import { MeetingType } from '../types';
 import type { UserRole } from '../App';
 
+// A simple, non-blocking toast notification
+const showToast = (message: string) => {
+  const toastId = 'toast-notification';
+  // Remove existing toast if any to prevent multiple toasts
+  const existingToast = document.getElementById(toastId);
+  if (existingToast) {
+    document.body.removeChild(existingToast);
+  }
+
+  const toast = document.createElement('div');
+  toast.id = toastId;
+  toast.textContent = message;
+  toast.style.position = 'fixed';
+  toast.style.bottom = '80px'; // Adjusted for bottom nav on mobile
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%)';
+  toast.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+  toast.style.color = 'white';
+  toast.style.padding = '12px 24px';
+  toast.style.borderRadius = '8px';
+  toast.style.zIndex = '1001'; // Above bottom nav which is z-50
+  toast.style.opacity = '0';
+  toast.style.transition = 'opacity 0.3s ease, bottom 0.3s ease';
+  toast.setAttribute('aria-live', 'assertive');
+  toast.setAttribute('role', 'status');
+  
+  document.body.appendChild(toast);
+
+  // Animate in
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.bottom = '90px';
+    }, 10);
+  });
+
+  // Animate out and remove after 3 seconds
+  const timeoutId = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.bottom = '80px';
+    setTimeout(() => {
+      if (document.body.contains(toast)) {
+        document.body.removeChild(toast);
+      }
+    }, 300);
+  }, 3000);
+
+  // Allow user to dismiss toast by clicking it
+  toast.addEventListener('click', () => {
+      clearTimeout(timeoutId);
+      toast.style.opacity = '0';
+      toast.style.bottom = '80px';
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 300);
+  });
+};
+
 interface MeetingsActivitiesProps {
   meetings: Meeting[];
   eventType: MeetingType;
@@ -69,20 +129,35 @@ const EventCard: React.FC<{
             try {
                 await navigator.share(shareData);
             } catch (error) {
-                if (error instanceof DOMException && error.name === 'AbortError') {
-                    console.log('Share dialog closed by user.');
-                } else {
+                if (!(error instanceof DOMException && error.name === 'AbortError')) {
                     console.error('Error sharing event:', error);
                 }
             }
         } else {
-            // Fallback for devices/browsers that do not support the Web Share API.
+            // Fallback to clipboard using execCommand for wider browser support
+            const textArea = document.createElement('textarea');
+            textArea.value = shareData.text;
+            
+            textArea.style.position = 'fixed';
+            textArea.style.top = '-9999px';
+            textArea.style.left = '-9999px';
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
             try {
-                await navigator.clipboard.writeText(shareText);
-                alert('Event details copied to clipboard. You can now paste it to share.');
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('Event details copied to clipboard!');
+                } else {
+                    showToast('Could not copy text. Share not supported.');
+                }
             } catch (err) {
                 console.error('Failed to copy event details to clipboard:', err);
-                alert('Sharing is not supported on this device.');
+                showToast('Could not copy text. Share not supported.');
+            } finally {
+                document.body.removeChild(textArea);
             }
         }
     };
