@@ -44,3 +44,19 @@ export interface Comment {
   user: 'Admin' | 'Guest';
   text: string;
 }
+
+export enum MeetingType {
+  MEETING = 'Meeting',
+  ACTIVITY = 'Activity',
+}
+
+export interface Meeting {
+  id: string;
+  title: string;
+  type: MeetingType;
+  date: string; // ISO string for date and time
+  location: string;
+  description: string;
+  link?: string;
+  invited?: string[];
+}

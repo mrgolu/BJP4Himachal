@@ -4,6 +4,8 @@ import type { UserRole } from '../App';
 interface HeaderProps {
   onNewPostClick: () => void;
   onHomeClick: () => void;
+  onMeetingsClick: () => void;
+  onActivitiesClick: () => void;
   userRole: UserRole;
   onLogout: () => void;
   isLive: boolean;
@@ -12,18 +14,36 @@ interface HeaderProps {
   onJoinLive: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, userRole, onLogout, isLive, liveTitle, onGoLive, onJoinLive }) => {
+const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetingsClick, onActivitiesClick, userRole, onLogout, isLive, liveTitle, onGoLive, onJoinLive }) => {
   return (
     <header className="bg-gradient-to-r from-bjp-orange via-bjp-white to-bjp-green shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={onHomeClick}>
-          <img src="https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Bharatiya_Janata_Party_logo.svg/1200px-Bharatiya_Janata_Party_logo.svg.png" alt="BJP Logo" className="h-12 w-12 object-contain"/>
-          <div>
-            <h1 className="text-xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
-              BJP Himachal Pradesh
-            </h1>
-            <p className="text-sm md:text-md text-gray-600 font-semibold">News Portal</p>
-          </div>
+        <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-3 cursor-pointer" onClick={onHomeClick}>
+            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Bharatiya_Janata_Party_logo.svg/1200px-Bharatiya_Janata_Party_logo.svg.png" alt="BJP Logo" className="h-12 w-12 object-contain"/>
+            <div>
+                <h1 className="text-xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
+                BJP Himachal Pradesh
+                </h1>
+                <p className="text-sm md:text-md text-gray-600 font-semibold">News Portal</p>
+            </div>
+            </div>
+            <nav className="hidden md:flex items-center space-x-6">
+                <button
+                    onClick={onMeetingsClick}
+                    className="text-md font-semibold text-gray-700 hover:text-bjp-orange transition-colors"
+                    aria-label="View Meetings"
+                >
+                    Meetings
+                </button>
+                 <button
+                    onClick={onActivitiesClick}
+                    className="text-md font-semibold text-gray-700 hover:text-bjp-orange transition-colors"
+                    aria-label="View Activities"
+                >
+                    Activities
+                </button>
+            </nav>
         </div>
         <div className="flex items-center space-x-4">
             {userRole === 'admin' ? (

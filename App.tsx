@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { NewsArticle, SocialLinks, Comment } from './types';
-import { NewsCategory } from './types';
+import type { NewsArticle, SocialLinks, Comment, Meeting } from './types';
+import { NewsCategory, MeetingType } from './types';
 import Header from './components/Header';
 import NewsFeed from './components/NewsFeed';
 import NewsDetail from './components/NewsDetail';
@@ -10,9 +10,11 @@ import AdminPanel from './components/AdminPanel';
 import SignIn from './components/SignIn';
 import LiveStreamAdmin from './components/LiveStreamAdmin';
 import LiveStreamUser from './components/LiveStreamUser';
+import MeetingsActivities from './components/MeetingsActivities';
+import ManageMeeting from './components/ManageMeeting';
 
 
-type View = 'feed' | 'manage' | 'detail' | 'admin' | 'live-admin' | 'live-user';
+type View = 'feed' | 'manage' | 'detail' | 'admin' | 'live-admin' | 'live-user' | 'meetings' | 'activities' | 'manage-meeting';
 export type UserRole = 'admin' | 'user';
 type AuthStatus = 'unauthenticated' | UserRole;
 
@@ -82,6 +84,56 @@ const App: React.FC = () => {
   ]);
   const [selectedPost, setSelectedPost] = useState<NewsArticle | null>(null);
   const [editingPost, setEditingPost] = useState<NewsArticle | null>(null);
+  const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
+  const [meetingReturnPath, setMeetingReturnPath] = useState<View>('meetings');
+  const [newMeetingType, setNewMeetingType] = useState<MeetingType>(MeetingType.MEETING);
+
+  const [meetings, setMeetings] = useState<Meeting[]>([
+    {
+      id: 'm4',
+      title: 'भाजपा आई टी विभाग की बैठक (BJP IT Department Meeting)',
+      type: MeetingType.MEETING,
+      date: new Date('2025-03-28T18:00:00').toISOString(),
+      location: 'Online via Webex',
+      description: 'A meeting for the IT department has been called by the BJP IT State Convener, Shri Anil Dadwal ji, with special guidance from State Vice President, Shri Sanjeev Katwal ji. The main topic is the \'Mann Ki Baat\' program.\n\nMeeting Number: 25169153957\nPassword: 12345',
+      link: 'https://ithpbjp.webex.com/ithpbjp/j.php?MTID=m0c337f33ba9997b8aa350dfd31c2eb6d',
+      invited: [
+          'आई टी प्रदेश सह संयोजक',
+          'आई टी  प्रदेश कार्यसमिति सदस्य',
+          'आई टी  संसदीय क्षेत्र  प्रभारी एवं सह प्रभारी',
+          'आई टी जिला संयोजक',
+          'आई टी मंडल संयोजक'
+      ],
+    },
+    {
+      id: 'm1',
+      title: 'District Karyakarini Baithak',
+      type: MeetingType.MEETING,
+      date: new Date(Date.now() + 86400000 * 5).toISOString(), // 5 days from now
+      location: 'BJP Office, Shimla',
+      description: 'Monthly review meeting for all district-level office bearers. Agenda includes planning for the upcoming state-wide campaign and review of recent activities.',
+      link: 'https://meet.google.com/lookup/h4g5x6y7z8',
+      invited: ['All district-level office bearers'],
+    },
+    {
+      id: 'm2',
+      title: 'Blood Donation Camp',
+      type: MeetingType.ACTIVITY,
+      date: new Date(Date.now() + 86400000 * 12).toISOString(), // 12 days from now
+      location: 'Community Hall, Mandi',
+      description: 'A public blood donation camp organized by the party\'s youth wing. All are welcome to participate and contribute to this noble cause.',
+      invited: ['Party youth wing members', 'General public'],
+    },
+    {
+      id: 'm3',
+      title: 'State Executive Meeting',
+      type: MeetingType.MEETING,
+      date: new Date(Date.now() - 86400000 * 10).toISOString(), // 10 days ago
+      location: 'Hotel Peterhoff, Shimla',
+      description: 'Quarterly state executive meeting to discuss policy matters and organizational strategy. Chaired by the State President.',
+      invited: ['State executive members', 'Special invitees'],
+    },
+]);
 
   const navigateToFeed = () => {
     setSelectedPost(null);
@@ -154,6 +206,25 @@ const App: React.FC = () => {
   const navigateToAdmin = () => {
       setCurrentView('admin');
   }
+  
+  const navigateToMeetings = () => {
+      setCurrentView('meetings');
+  }
+  
+  const navigateToActivities = () => {
+      setCurrentView('activities');
+  }
+
+  const navigateToManageMeeting = (meeting: Meeting | null) => {
+    if (currentView === 'meetings' || currentView === 'activities') {
+      setMeetingReturnPath(currentView);
+    }
+    if (!meeting) { // This is a new event
+      setNewMeetingType(currentView === 'meetings' ? MeetingType.MEETING : MeetingType.ACTIVITY);
+    }
+    setEditingMeeting(meeting);
+    setCurrentView('manage-meeting');
+  };
 
   const handleSaveSocialLinks = (links: SocialLinks) => {
     setSocialLinks(links);
@@ -206,10 +277,54 @@ const App: React.FC = () => {
     };
     setLiveStream(prev => prev ? { ...prev, comments: [...prev.comments, newComment] } : null);
   };
+  
+  const handleCreateMeeting = (newMeetingData: Omit<Meeting, 'id'>) => {
+    const newMeeting: Meeting = {
+      ...newMeetingData,
+      id: `m-${new Date().getTime()}`,
+    };
+    setMeetings(prev => [newMeeting, ...prev]);
+    setCurrentView(meetingReturnPath);
+  };
+  
+  const handleUpdateMeeting = (updatedMeeting: Meeting) => {
+    setMeetings(prev => prev.map(m => m.id === updatedMeeting.id ? updatedMeeting : m));
+    setCurrentView(meetingReturnPath);
+  };
+  
+  const handleDeleteMeeting = (meetingId: string) => {
+    setMeetings(prev => prev.filter(m => m.id !== meetingId));
+  };
 
   const renderContent = (userRole: UserRole) => {
     const postForDetailView = posts.find(p => p.id === selectedPost?.id)
     switch (currentView) {
+      case 'manage-meeting':
+        return <ManageMeeting
+            onCreate={handleCreateMeeting}
+            onUpdate={handleUpdateMeeting}
+            meetingToEdit={editingMeeting}
+            newMeetingType={newMeetingType}
+            onCancel={() => setCurrentView(meetingReturnPath)}
+        />
+      case 'meetings':
+        return <MeetingsActivities
+          meetings={meetings}
+          eventType={MeetingType.MEETING}
+          userRole={userRole}
+          onAddNew={() => navigateToManageMeeting(null)}
+          onEdit={navigateToManageMeeting}
+          onDelete={handleDeleteMeeting}
+        />
+      case 'activities':
+        return <MeetingsActivities
+          meetings={meetings}
+          eventType={MeetingType.ACTIVITY}
+          userRole={userRole}
+          onAddNew={() => navigateToManageMeeting(null)}
+          onEdit={navigateToManageMeeting}
+          onDelete={handleDeleteMeeting}
+        />
       case 'live-admin':
         return <LiveStreamAdmin 
                   onStreamEnd={handleEndStream} 
@@ -257,6 +372,8 @@ const App: React.FC = () => {
       <Header 
         onNewPostClick={navigateToManage} 
         onHomeClick={navigateToFeed} 
+        onMeetingsClick={navigateToMeetings}
+        onActivitiesClick={navigateToActivities}
         userRole={userRole} 
         onLogout={handleLogout} 
         isLive={!!liveStream}
