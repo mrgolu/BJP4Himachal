@@ -74,6 +74,16 @@ const EventCard: React.FC<{
         }
     };
 
+    const handleJoinClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (event.link) {
+            // Forcing a top-level navigation is more reliable for triggering
+            // native app deep links (like Webex) from a PWA on mobile.
+            window.location.assign(event.link);
+        }
+    };
+
     const showBottomBar = event.link || typeof navigator.share !== 'undefined';
 
 
@@ -136,8 +146,7 @@ const EventCard: React.FC<{
                     {event.link && (
                         <a
                             href={event.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            onClick={handleJoinClick}
                             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-bjp-green hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-green"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
