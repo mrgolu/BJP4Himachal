@@ -52,27 +52,38 @@ const EventCard: React.FC<{
 
     const handleShare = async (e: React.MouseEvent) => {
         e.stopPropagation();
+
+        const shareText = `*${event.type}: ${event.title}*\n\n` +
+                          `🗓️ *Date:* ${formattedDate}\n` +
+                          `🕗 *Time:* ${formattedTime}\n` +
+                          `📍 *Location:* ${event.location}\n\n` +
+                          `*Details:*\n${event.description}\n\n` +
+                          (event.link ? `🔗 *Join/View Link:*\n${event.link}` : '');
+        
+        const shareData = {
+            title: `BJP HP ${event.type}: ${event.title}`,
+            text: shareText,
+        };
+
         if (navigator.share) {
             try {
-                let shareText = `*${event.type}: ${event.title}*\n\n` +
-                              `🗓️ *Date:* ${formattedDate}\n` +
-                              `🕗 *Time:* ${formattedTime}\n` +
-                              `📍 *Location:* ${event.location}\n\n` +
-                              `*Details:*\n${event.description}\n\n`;
-
-                if (event.link) {
-                    shareText += `🔗 *Join/View Link:*\n${event.link}`;
-                }
-
-                await navigator.share({
-                    title: `BJP HP ${event.type}: ${event.title}`,
-                    text: shareText,
-                });
+                await navigator.share(shareData);
             } catch (error) {
-                console.log('Error sharing or share cancelled:', error);
+                if (error instanceof DOMException && error.name === 'AbortError') {
+                    console.log('Share dialog closed by user.');
+                } else {
+                    console.error('Error sharing event:', error);
+                }
             }
         } else {
-            alert('Share functionality is not supported on this device/browser.');
+            // Fallback for devices/browsers that do not support the Web Share API.
+            try {
+                await navigator.clipboard.writeText(shareText);
+                alert('Event details copied to clipboard. You can now paste it to share.');
+            } catch (err) {
+                console.error('Failed to copy event details to clipboard:', err);
+                alert('Sharing is not supported on this device.');
+            }
         }
     };
 
