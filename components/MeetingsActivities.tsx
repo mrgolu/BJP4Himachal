@@ -113,28 +113,39 @@ const EventCard: React.FC<{
     const handleShare = async (e: React.MouseEvent) => {
         e.stopPropagation();
 
+        // Ensure there's always a link to share, defaulting to the app's main page.
+        const eventUrl = event.link || window.location.href;
+        const linkTitle = event.link ? (event.type === MeetingType.MEETING ? 'Join Online Meeting' : 'View Activity Link') : 'View on Portal';
+
         const shareText = `*${event.type}: ${event.title}*\n\n` +
                           `🗓️ *Date:* ${formattedDate}\n` +
                           `🕗 *Time:* ${formattedTime}\n` +
                           `📍 *Location:* ${event.location}\n\n` +
                           `*Details:*\n${event.description}\n\n` +
-                          (event.link ? `🔗 *Join/View Link:*\n${event.link}` : '');
+                          `🔗 *${linkTitle}:*\n${eventUrl}`;
         
         const shareData = {
             title: `BJP HP ${event.type}: ${event.title}`,
             text: shareText,
+            url: eventUrl,
         };
 
         if (navigator.share) {
             try {
-                await navigator.share(shareData);
+                // For native share, a shorter text and the URL are often better.
+                await navigator.share({
+                    title: shareData.title,
+                    text: `Details for: ${event.title}`,
+                    url: shareData.url,
+                });
             } catch (error) {
                 if (!(error instanceof DOMException && error.name === 'AbortError')) {
                     console.error('Error sharing event:', error);
                 }
             }
         } else {
-            // Fallback to clipboard using execCommand for wider browser support
+            // Fallback to clipboard using execCommand for wider browser support.
+            // The full, formatted text is best for this.
             const textArea = document.createElement('textarea');
             textArea.value = shareData.text;
             
@@ -149,7 +160,7 @@ const EventCard: React.FC<{
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
-                    showToast('Event details copied to clipboard!');
+                    showToast('Event details and link copied to clipboard!');
                 } else {
                     showToast('Could not copy text. Share not supported.');
                 }

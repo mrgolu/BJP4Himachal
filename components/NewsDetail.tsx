@@ -142,23 +142,32 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
   };
 
   const handleShare = async () => {
+    const articleUrl = window.location.href;
     const shareData = {
       title: post.title,
-      text: `${post.title}\n\n${post.content.replace(/\\n/g, '\n')}`,
+      text: post.content.replace(/\\n/g, '\n'), // Full content for clipboard
+      url: articleUrl,
     };
 
     if (navigator.share) {
       try {
-        await navigator.share(shareData);
+        // For native share, a shorter text snippet is often better
+        // as the OS will show a rich preview of the URL.
+        await navigator.share({
+          title: shareData.title,
+          text: `${post.title}`,
+          url: shareData.url,
+        });
       } catch (error) {
         if (!(error instanceof DOMException && error.name === 'AbortError')) {
           console.error('Error sharing article:', error);
         }
       }
     } else {
-      // Fallback to clipboard using execCommand for wider browser support
+      // Fallback to clipboard: combine title, content, and URL into one string.
+      const clipboardText = `${post.title}\n\n${shareData.text}\n\nRead more at: ${shareData.url}`;
       const textArea = document.createElement('textarea');
-      textArea.value = shareData.text;
+      textArea.value = clipboardText;
       
       // Make the textarea out of sight
       textArea.style.position = 'fixed';
@@ -172,7 +181,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
       try {
         const successful = document.execCommand('copy');
         if (successful) {
-          showToast('Article content copied to clipboard!');
+          showToast('Article content and link copied to clipboard!');
         } else {
           showToast('Could not copy text. Share not supported.');
         }
