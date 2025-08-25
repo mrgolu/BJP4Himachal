@@ -1,3 +1,4 @@
+
 export enum NewsCategory {
   STATE = 'State News',
   NATIONAL = 'National News',
@@ -31,6 +32,7 @@ export interface NewsArticle {
     insta?: string;
     x?: string;
   };
+  createdAt: string;
 }
 
 export interface SocialLinks {
@@ -59,4 +61,5 @@ export interface Meeting {
   description: string;
   link?: string;
   invited?: string[];
+  createdAt: string;
 }

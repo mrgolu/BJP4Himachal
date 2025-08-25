@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import type { NewsArticle, FeaturedMedia } from '../types';
 import { NewsCategory } from '../types';
 import { GoogleGenAI } from '@google/genai';
 
 interface ManagePanelProps {
-  onCreatePost: (post: Omit<NewsArticle, 'id' | 'date' | 'views' | 'linkClicks'>) => void;
+  onCreatePost: (post: Omit<NewsArticle, 'id' | 'date' | 'views' | 'linkClicks' | 'createdAt'>) => void;
   onUpdatePost: (post: NewsArticle) => void;
   postToEdit?: NewsArticle | null;
   onCancel: () => void;
@@ -117,6 +118,7 @@ const ManagePanel: React.FC<ManagePanelProps> = ({ onCreatePost, onUpdatePost, p
         ...postData,
         id: postToEdit.id,
         date: postToEdit.date,
+        createdAt: postToEdit.createdAt,
         views: originalAnalytics.views,
         linkClicks: originalAnalytics.linkClicks
       });

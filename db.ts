@@ -49,6 +49,7 @@ const initialPosts: NewsArticle[] = [
         insta: 'https://www.instagram.com/reel/DNnLD_8ht_Y/?igsh=M2FkbjVtdzV5Zjcy',
         x: 'https://x.com/BJP4Himachal/status/1958461746160508985',
       },
+      createdAt: new Date().toISOString(),
     },
     {
       id: '1',
@@ -64,6 +65,7 @@ const initialPosts: NewsArticle[] = [
       date: new Date(Date.now() - 86400000).toISOString(),
       views: 1543,
       linkClicks: { fb: 0, insta: 0, x: 0 },
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
     },
     {
       id: '2',
@@ -79,6 +81,7 @@ const initialPosts: NewsArticle[] = [
       date: new Date(Date.now() - 172800000).toISOString(),
       views: 876,
       linkClicks: { fb: 0, insta: 0, x: 0 },
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
     },
 ];
 
@@ -98,6 +101,7 @@ const initialMeetings: Meeting[] = [
           'आई टी जिला संयोजक',
           'आई टी मंडल संयोजक'
       ],
+      createdAt: new Date().toISOString(),
     },
     {
       id: 'm1',
@@ -108,6 +112,7 @@ const initialMeetings: Meeting[] = [
       description: 'Monthly review meeting for all district-level office bearers. Agenda includes planning for the upcoming state-wide campaign and review of recent activities.',
       link: 'https://meet.google.com/lookup/h4g5x6y7z8',
       invited: ['All district-level office bearers'],
+      createdAt: new Date().toISOString(),
     },
     {
       id: 'm2',
@@ -117,6 +122,7 @@ const initialMeetings: Meeting[] = [
       location: 'Community Hall, Mandi',
       description: 'A public blood donation camp organized by the party\'s youth wing. All are welcome to participate and contribute to this noble cause.',
       invited: ['Party youth wing members', 'General public'],
+      createdAt: new Date().toISOString(),
     },
     {
       id: 'm3',
@@ -126,6 +132,7 @@ const initialMeetings: Meeting[] = [
       location: 'Hotel Peterhoff, Shimla',
       description: 'Quarterly state executive meeting to discuss policy matters and organizational strategy. Chaired by the State President.',
       invited: ['State executive members', 'Special invitees'],
+      createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
     },
 ];
 
@@ -193,11 +200,12 @@ export const getNewsArticles = async (): Promise<NewsArticle[]> => {
   return (await dbPromise).getAll(NEWS_STORE);
 };
 
-export const addNewsArticle = async (postData: Omit<NewsArticle, 'id' | 'date' | 'views' | 'linkClicks'>): Promise<NewsArticle> => {
+export const addNewsArticle = async (postData: Omit<NewsArticle, 'id' | 'date' | 'views' | 'linkClicks' | 'createdAt'>): Promise<NewsArticle> => {
   const newPost: NewsArticle = {
     ...postData,
     id: new Date().getTime().toString(),
     date: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
     views: 0,
     linkClicks: { fb: 0, insta: 0, x: 0 },
   };
@@ -218,10 +226,11 @@ export const getMeetings = async (): Promise<Meeting[]> => {
   return (await dbPromise).getAll(MEETINGS_STORE);
 };
 
-export const addMeeting = async (meetingData: Omit<Meeting, 'id'>): Promise<Meeting> => {
+export const addMeeting = async (meetingData: Omit<Meeting, 'id' | 'createdAt'>): Promise<Meeting> => {
   const newMeeting: Meeting = {
     ...meetingData,
     id: `m-${new Date().getTime()}`,
+    createdAt: new Date().toISOString(),
   };
   await (await dbPromise).add(MEETINGS_STORE, newMeeting);
   return newMeeting;

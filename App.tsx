@@ -14,21 +14,25 @@ import LiveStreamUser from './components/LiveStreamUser';
 import MeetingsActivities from './components/MeetingsActivities';
 import ManageMeeting from './components/ManageMeeting';
 import BottomNav from './components/BottomNav';
-import { 
-  initDB, 
-  getNewsArticles, 
-  addNewsArticle, 
-  updateNewsArticle, 
-  deleteNewsArticle,
-  getMeetings,
-  addMeeting,
-  updateMeeting,
-  deleteMeeting,
-  getSocialLinks,
-  saveSocialLinks,
-  getLastVisitTimestamp,
-  updateLastVisitTimestamp
-} from './db';
+
+// --- LocalStorage Helpers for Notification Timestamps ---
+const getLastVisitTimestamp = (section: 'feed' | 'meetings' | 'activities'): number => {
+    try {
+        const timestamp = localStorage.getItem(`lastVisit_${section}`);
+        return timestamp ? parseInt(timestamp, 10) : 0;
+    } catch (error) {
+        console.error("Could not read from localStorage", error);
+        return 0;
+    }
+};
+
+const updateLastVisitTimestamp = (section: 'feed' | 'meetings' | 'activities'): void => {
+    try {
+        localStorage.setItem(`lastVisit_${section}`, Date.now().toString());
+    } catch (error) {
+        console.error("Could not write to localStorage", error);
+    }
+};
 
 
 type View = 'feed' | 'manage' | 'detail' | 'admin' | 'live-admin' | 'live-user' | 'meetings' | 'activities' | 'manage-meeting';
@@ -38,8 +42,9 @@ type AuthStatus = 'unauthenticated' | UserRole;
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('feed');
   const [authStatus, setAuthStatus] = useState<AuthStatus>('unauthenticated');
+  const [adminSecret, setAdminSecret] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [isDbInitialized, setIsDbInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [liveStream, setLiveStream] = useState<{ title: string; comments: Comment[] } | null>(null);
 
@@ -57,107 +62,137 @@ const App: React.FC = () => {
   const [meetingReturnPath, setMeetingReturnPath] = useState<View>('meetings');
   const [newMeetingType, setNewMeetingType] = useState<MeetingType>(MeetingType.MEETING);
   
-  const checkNotifications = async (allPosts: NewsArticle[], allMeetings: Meeting[]) => {
-      if (authStatus === 'admin') return; // Don't show notifications for admin
+  const checkNotifications = (allPosts: NewsArticle[], allMeetings: Meeting[]) => {
+      if (authStatus === 'admin') return;
 
-      const [lastFeedVisit, lastMeetingsVisit, lastActivitiesVisit] = await Promise.all([
-          getLastVisitTimestamp('feed'),
-          getLastVisitTimestamp('meetings'),
-          getLastVisitTimestamp('activities'),
-      ]);
+      const lastFeedVisit = getLastVisitTimestamp('feed');
+      const lastMeetingsVisit = getLastVisitTimestamp('meetings');
+      const lastActivitiesVisit = getLastVisitTimestamp('activities');
 
-      const newPost = allPosts.some(post => {
-          // Assuming post.id can be parsed as a number (timestamp)
-          const postIdTimestamp = parseInt(post.id, 10);
-          return !isNaN(postIdTimestamp) && postIdTimestamp > lastFeedVisit;
-      });
+      const newPost = allPosts.some(post => new Date(post.createdAt).getTime() > lastFeedVisit);
       setHasNewPosts(newPost);
 
-      const newMeeting = allMeetings.some(m => m.type === MeetingType.MEETING && parseInt(m.id.split('-')[1]) > lastMeetingsVisit);
+      const newMeeting = allMeetings.some(m => m.type === MeetingType.MEETING && new Date(m.createdAt).getTime() > lastMeetingsVisit);
       setHasNewMeetings(newMeeting);
 
-      const newActivity = allMeetings.some(m => m.type === MeetingType.ACTIVITY && parseInt(m.id.split('-')[1]) > lastActivitiesVisit);
+      const newActivity = allMeetings.some(m => m.type === MeetingType.ACTIVITY && new Date(m.createdAt).getTime() > lastActivitiesVisit);
       setHasNewActivities(newActivity);
   };
   
   useEffect(() => {
-    const initializeData = async () => {
-      await initDB();
-      const [dbPosts, dbMeetings, dbLinks] = await Promise.all([
-        getNewsArticles(),
-        getMeetings(),
-        getSocialLinks(),
-      ]);
-      const sortedPosts = dbPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setPosts(sortedPosts);
-      setMeetings(dbMeetings);
-      setSocialLinks(dbLinks);
-      setIsDbInitialized(true);
-      
-      checkNotifications(sortedPosts, dbMeetings);
+    const loadData = async () => {
+        setIsLoading(true);
+        try {
+            const [postsRes, meetingsRes, linksRes] = await Promise.all([
+                fetch('/api/posts'),
+                fetch('/api/meetings'),
+                fetch('/api/settings'),
+            ]);
+
+            if (!postsRes.ok || !meetingsRes.ok || !linksRes.ok) {
+                throw new Error('Failed to fetch initial data');
+            }
+
+            const [dbPosts, dbMeetings, dbLinks] = await Promise.all([
+                postsRes.json(),
+                meetingsRes.json(),
+                linksRes.json(),
+            ]);
+            
+            setPosts(dbPosts);
+            setMeetings(dbMeetings);
+            setSocialLinks(dbLinks);
+            
+            checkNotifications(dbPosts, dbMeetings);
+        } catch (error) {
+            console.error("Failed to load portal data:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
-    initializeData();
+
+    if (authStatus !== 'unauthenticated') {
+        loadData();
+    }
   }, [authStatus]);
 
+  const refetchData = async () => {
+      const [postsRes, meetingsRes] = await Promise.all([
+          fetch('/api/posts'),
+          fetch('/api/meetings'),
+      ]);
+      const [dbPosts, dbMeetings] = await Promise.all([postsRes.json(), meetingsRes.json()]);
+      setPosts(dbPosts);
+      setMeetings(dbMeetings);
+  };
 
   const navigateToFeed = () => {
     setSelectedPost(null);
     setEditingPost(null);
     setCurrentView('feed');
     if (hasNewPosts) {
-      updateLastVisitTimestamp('feed').then(() => setHasNewPosts(false));
+      updateLastVisitTimestamp('feed');
+      setHasNewPosts(false);
     }
   };
 
-  const handleCreatePost = async (newPostData: Omit<NewsArticle, 'id' | 'date' | 'views' | 'linkClicks'>) => {
-    const newPost = await addNewsArticle(newPostData);
-    setPosts(prevPosts => [newPost, ...prevPosts]);
+  const handleCreatePost = async (newPostData: Omit<NewsArticle, 'id' | 'date' | 'views' | 'linkClicks' | 'createdAt'>) => {
+    await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminSecret}` },
+        body: JSON.stringify(newPostData),
+    });
+    await refetchData();
     navigateToFeed();
   };
 
   const handleUpdatePost = async (updatedPost: NewsArticle) => {
-    await updateNewsArticle(updatedPost);
-    setPosts(prevPosts => prevPosts.map(p => p.id === updatedPost.id ? updatedPost : p));
+    await fetch('/api/posts', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminSecret}` },
+        body: JSON.stringify(updatedPost),
+    });
+    await refetchData();
     if (selectedPost?.id === updatedPost.id) {
-        setSelectedPost(updatedPost);
+        const post = await (await fetch(`/api/posts?id=${updatedPost.id}`)).json();
+        setSelectedPost(post);
     }
     navigateToFeed();
   }
 
   const handleDeletePost = async (postId: string) => {
-    await deleteNewsArticle(postId);
+    await fetch(`/api/posts?id=${postId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${adminSecret}` },
+    });
     const isViewingDeletedPost = currentView === 'detail' && selectedPost?.id === postId;
-    setPosts(prevPosts => prevPosts.filter(p => p.id !== postId));
+    await refetchData();
     if (isViewingDeletedPost) {
       navigateToFeed();
     }
   };
   
   const handleIncrementView = async (postId: string) => {
-    const postToUpdate = posts.find(p => p.id === postId);
-    if (postToUpdate) {
-        const updatedPost = { ...postToUpdate, views: postToUpdate.views + 1 };
-        await updateNewsArticle(updatedPost);
-        setPosts(posts => posts.map(p => p.id === postId ? updatedPost : p));
-        if (selectedPost?.id === postId) {
-            setSelectedPost(updatedPost);
-        }
+    await fetch(`/api/posts?action=view`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: postId }),
+    });
+    // Optimistically update to avoid refetch
+    setPosts(posts => posts.map(p => p.id === postId ? { ...p, views: p.views + 1 } : p));
+    if (selectedPost?.id === postId) {
+        setSelectedPost(prev => prev ? { ...prev, views: prev.views + 1 } : null);
     }
   };
   
   const handleIncrementLinkClick = async (postId: string, platform: 'fb' | 'insta' | 'x') => {
-    const postToUpdate = posts.find(p => p.id === postId);
-    if (postToUpdate) {
-        const updatedPost = {
-            ...postToUpdate,
-            linkClicks: {
-                ...postToUpdate.linkClicks,
-                [platform]: postToUpdate.linkClicks[platform] + 1,
-            }
-        };
-        await updateNewsArticle(updatedPost);
-        setPosts(posts => posts.map(p => p.id === postId ? updatedPost : p));
-    }
+    await fetch(`/api/posts?action=click`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: postId, platform }),
+    });
+    // Optimistically update
+    setPosts(posts => posts.map(p => p.id === postId ? { ...p, linkClicks: { ...p.linkClicks, [platform]: p.linkClicks[platform] + 1 } } : p));
   }
 
   const handleStartEdit = (post: NewsArticle) => {
@@ -183,14 +218,16 @@ const App: React.FC = () => {
   const navigateToMeetings = () => {
       setCurrentView('meetings');
       if (hasNewMeetings) {
-        updateLastVisitTimestamp('meetings').then(() => setHasNewMeetings(false));
+        updateLastVisitTimestamp('meetings');
+        setHasNewMeetings(false);
       }
   }
   
   const navigateToActivities = () => {
       setCurrentView('activities');
       if (hasNewActivities) {
-        updateLastVisitTimestamp('activities').then(() => setHasNewActivities(false));
+        updateLastVisitTimestamp('activities');
+        setHasNewActivities(false);
       }
   }
 
@@ -206,13 +243,23 @@ const App: React.FC = () => {
   };
 
   const handleSaveSocialLinks = async (links: SocialLinks) => {
-    await saveSocialLinks(links);
+    await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminSecret}` },
+        body: JSON.stringify(links),
+    });
     setSocialLinks(links);
     navigateToFeed();
   };
 
-  const handleLogin = (password: string) => {
-    if (password === 'bjp4hp') {
+  const handleLogin = async (password: string) => {
+    const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+    });
+    if (response.ok) {
+      setAdminSecret(password);
       setAuthStatus('admin');
       setLoginError(null);
       setCurrentView('feed');
@@ -223,6 +270,7 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setAuthStatus('unauthenticated');
+    setAdminSecret(null);
     setCurrentView('feed');
   };
 
@@ -258,21 +306,32 @@ const App: React.FC = () => {
     setLiveStream(prev => prev ? { ...prev, comments: [...prev.comments, newComment] } : null);
   };
   
-  const handleCreateMeeting = async (newMeetingData: Omit<Meeting, 'id'>) => {
-    const newMeeting = await addMeeting(newMeetingData);
-    setMeetings(prev => [newMeeting, ...prev]);
+  const handleCreateMeeting = async (newMeetingData: Omit<Meeting, 'id' | 'createdAt'>) => {
+    await fetch('/api/meetings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminSecret}` },
+        body: JSON.stringify(newMeetingData),
+    });
+    await refetchData();
     setCurrentView(meetingReturnPath);
   };
   
   const handleUpdateMeeting = async (updatedMeeting: Meeting) => {
-    await updateMeeting(updatedMeeting);
-    setMeetings(prev => prev.map(m => m.id === updatedMeeting.id ? updatedMeeting : m));
+    await fetch('/api/meetings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminSecret}` },
+        body: JSON.stringify(updatedMeeting),
+    });
+    await refetchData();
     setCurrentView(meetingReturnPath);
   };
   
   const handleDeleteMeeting = async (meetingId: string) => {
-    await deleteMeeting(meetingId);
-    setMeetings(prev => prev.filter(m => m.id !== meetingId));
+    await fetch(`/api/meetings?id=${meetingId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${adminSecret}` },
+    });
+    await refetchData();
   };
 
   const onJoinLive = () => {
@@ -282,7 +341,7 @@ const App: React.FC = () => {
   }
 
   const renderContent = (userRole: UserRole) => {
-    if (!isDbInitialized) {
+    if (isLoading) {
         return <div className="flex justify-center items-center h-64"><p>Loading data...</p></div>
     }
     const postForDetailView = posts.find(p => p.id === selectedPost?.id)
