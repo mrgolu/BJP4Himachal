@@ -5,7 +5,8 @@ const urlsToCache = [
   '/index.html',
   '/index.tsx',
   'https://cdn.tailwindcss.com',
-  'https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Bharatiya_Janata_Party_logo.svg/1200px-Bharatiya_Janata_Party_logo.svg.png'
+  'https://upload.wikimedia.org/wikipedia/commons/a/a2/BJP_logo_with_circle.svg',
+  'https://seeklogo.com/images/B/bjp-logo-D51E48395A-seeklogo.com.png',
 ];
 
 // Install a service worker

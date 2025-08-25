@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { UserRole } from '../App';
 
@@ -20,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetings
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-3 cursor-pointer" onClick={onHomeClick}>
-            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Bharatiya_Janata_Party_logo.svg/1200px-Bharatiya_Janata_Party_logo.svg.png" alt="BJP Logo" className="h-12 w-12 object-contain"/>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/BJP_logo_with_circle.svg" alt="BJP Logo" className="h-12 w-12 object-contain"/>
             <div>
                 <h1 className="text-xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
                 BJP Himachal Pradesh

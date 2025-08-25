@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 
 interface SignInProps {
@@ -18,7 +19,7 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error })
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-2xl p-8 space-y-6">
         <div className="text-center">
-          <img src="https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Bharatiya_Janata_Party_logo.svg/1200px-Bharatiya_Janata_Party_logo.svg.png" alt="BJP Logo" className="h-20 w-20 mx-auto object-contain"/>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/BJP_logo_with_circle.svg" alt="BJP Logo" className="h-20 w-20 mx-auto object-contain"/>
           <h1 className="text-3xl font-extrabold text-gray-800 mt-4">
             BJP Himachal Pradesh
           </h1>
