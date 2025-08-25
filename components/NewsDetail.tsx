@@ -125,7 +125,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
     
     switch (post.featuredMedia.type) {
       case 'image':
-        return <img className="w-full h-auto max-h-[500px] object-cover rounded-lg shadow-md" src={post.featuredMedia.url} alt={post.title} />;
+        return <img className="w-full h-auto max-h-[500px] object-contain bg-gray-100 rounded-lg shadow-md" src={post.featuredMedia.url} alt={post.title} />;
       case 'video':
         return <video className="w-full h-auto max-h-[500px] rounded-lg shadow-md bg-black" src={post.featuredMedia.url} controls />;
       case 'document':

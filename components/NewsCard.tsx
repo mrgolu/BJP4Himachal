@@ -47,12 +47,12 @@ const NewsCard: React.FC<NewsCardProps> = ({ post, onSelectPost, onEditPost, onD
   const renderMediaPreview = () => {
     switch (post.featuredMedia.type) {
       case 'image':
-        return <img className="w-full h-48 object-cover" src={post.featuredMedia.url} alt={post.title} />;
+        return <img className="w-full h-48 object-contain bg-gray-100" src={post.featuredMedia.url} alt={post.title} />;
       case 'video':
         return (
           <video
             src={post.featuredMedia.url}
-            className="w-full h-48 object-cover bg-black"
+            className="w-full h-48 object-contain bg-black"
             autoPlay
             loop
             muted
