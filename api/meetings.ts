@@ -1,4 +1,3 @@
-
 // This should be at `api/meetings.ts`
 import { db, sql } from '@vercel/postgres';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,8 +8,14 @@ export const config = {
 
 // Middleware for admin authentication
 async function authMiddleware(req: Request) {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  // Fail safely if the admin password isn't set on the server.
+  if (!adminPassword) {
+    console.error('CRITICAL: ADMIN_PASSWORD environment variable not set on API endpoint.');
+    return false;
+  }
   const token = req.headers.get('Authorization')?.split('Bearer ')[1];
-  return token === process.env.ADMIN_PASSWORD;
+  return token === adminPassword;
 }
 
 export default async function handler(req: Request) {
