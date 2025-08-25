@@ -25,7 +25,9 @@ import {
   updateMeeting,
   deleteMeeting,
   getSocialLinks,
-  saveSocialLinks
+  saveSocialLinks,
+  getLastVisitTimestamp,
+  updateLastVisitTimestamp
 } from './db';
 
 
@@ -44,12 +46,39 @@ const App: React.FC = () => {
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({ fb: '', insta: '', x: '' });
   const [posts, setPosts] = useState<NewsArticle[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
+  
+  const [hasNewPosts, setHasNewPosts] = useState(false);
+  const [hasNewMeetings, setHasNewMeetings] = useState(false);
+  const [hasNewActivities, setHasNewActivities] = useState(false);
 
   const [selectedPost, setSelectedPost] = useState<NewsArticle | null>(null);
   const [editingPost, setEditingPost] = useState<NewsArticle | null>(null);
   const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
   const [meetingReturnPath, setMeetingReturnPath] = useState<View>('meetings');
   const [newMeetingType, setNewMeetingType] = useState<MeetingType>(MeetingType.MEETING);
+  
+  const checkNotifications = async (allPosts: NewsArticle[], allMeetings: Meeting[]) => {
+      if (authStatus === 'admin') return; // Don't show notifications for admin
+
+      const [lastFeedVisit, lastMeetingsVisit, lastActivitiesVisit] = await Promise.all([
+          getLastVisitTimestamp('feed'),
+          getLastVisitTimestamp('meetings'),
+          getLastVisitTimestamp('activities'),
+      ]);
+
+      const newPost = allPosts.some(post => {
+          // Assuming post.id can be parsed as a number (timestamp)
+          const postIdTimestamp = parseInt(post.id, 10);
+          return !isNaN(postIdTimestamp) && postIdTimestamp > lastFeedVisit;
+      });
+      setHasNewPosts(newPost);
+
+      const newMeeting = allMeetings.some(m => m.type === MeetingType.MEETING && parseInt(m.id.split('-')[1]) > lastMeetingsVisit);
+      setHasNewMeetings(newMeeting);
+
+      const newActivity = allMeetings.some(m => m.type === MeetingType.ACTIVITY && parseInt(m.id.split('-')[1]) > lastActivitiesVisit);
+      setHasNewActivities(newActivity);
+  };
   
   useEffect(() => {
     const initializeData = async () => {
@@ -59,19 +88,25 @@ const App: React.FC = () => {
         getMeetings(),
         getSocialLinks(),
       ]);
-      setPosts(dbPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+      const sortedPosts = dbPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setPosts(sortedPosts);
       setMeetings(dbMeetings);
       setSocialLinks(dbLinks);
       setIsDbInitialized(true);
+      
+      checkNotifications(sortedPosts, dbMeetings);
     };
     initializeData();
-  }, []);
+  }, [authStatus]);
 
 
   const navigateToFeed = () => {
     setSelectedPost(null);
     setEditingPost(null);
     setCurrentView('feed');
+    if (hasNewPosts) {
+      updateLastVisitTimestamp('feed').then(() => setHasNewPosts(false));
+    }
   };
 
   const handleCreatePost = async (newPostData: Omit<NewsArticle, 'id' | 'date' | 'views' | 'linkClicks'>) => {
@@ -147,10 +182,16 @@ const App: React.FC = () => {
   
   const navigateToMeetings = () => {
       setCurrentView('meetings');
+      if (hasNewMeetings) {
+        updateLastVisitTimestamp('meetings').then(() => setHasNewMeetings(false));
+      }
   }
   
   const navigateToActivities = () => {
       setCurrentView('activities');
+      if (hasNewActivities) {
+        updateLastVisitTimestamp('activities').then(() => setHasNewActivities(false));
+      }
   }
 
   const navigateToManageMeeting = (meeting: Meeting | null) => {
@@ -327,6 +368,9 @@ const App: React.FC = () => {
         liveTitle={liveStream?.title}
         onGoLive={() => setCurrentView('live-admin')}
         onJoinLive={onJoinLive}
+        hasNewPosts={hasNewPosts}
+        hasNewMeetings={hasNewMeetings}
+        hasNewActivities={hasNewActivities}
       />
       <main className="container mx-auto p-4 md:p-8 flex-grow pb-20 md:pb-0">
         {renderContent(userRole)}
@@ -339,6 +383,9 @@ const App: React.FC = () => {
         onActivitiesClick={navigateToActivities}
         onLiveClick={onJoinLive}
         isLive={!!liveStream}
+        hasNewPosts={hasNewPosts}
+        hasNewMeetings={hasNewMeetings}
+        hasNewActivities={hasNewActivities}
       />
     </div>
   );

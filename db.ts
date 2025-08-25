@@ -8,6 +8,7 @@ const DB_VERSION = 1;
 const NEWS_STORE = 'news';
 const MEETINGS_STORE = 'meetings';
 const SETTINGS_STORE = 'settings';
+const USER_STATE_STORE = 'userState';
 
 interface AppDB extends DBSchema {
   [NEWS_STORE]: {
@@ -21,6 +22,10 @@ interface AppDB extends DBSchema {
   [SETTINGS_STORE]: {
     key: string;
     value: any;
+  };
+  [USER_STATE_STORE]: {
+    key: string;
+    value: number; // timestamp
   };
 }
 
@@ -141,6 +146,9 @@ const dbPromise = openDB<AppDB>(DB_NAME, DB_VERSION, {
     if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
       db.createObjectStore(SETTINGS_STORE);
     }
+    if (!db.objectStoreNames.contains(USER_STATE_STORE)) {
+      db.createObjectStore(USER_STATE_STORE);
+    }
   },
 });
 
@@ -155,7 +163,7 @@ export const initDB = async () => {
   }
   
   // If not initialized, start a single transaction to seed all initial data.
-  const tx = db.transaction([NEWS_STORE, MEETINGS_STORE, SETTINGS_STORE], 'readwrite');
+  const tx = db.transaction([NEWS_STORE, MEETINGS_STORE, SETTINGS_STORE, USER_STATE_STORE], 'readwrite');
   
   // Seed News Articles
   initialPosts.forEach(post => tx.objectStore(NEWS_STORE).add(post));
@@ -165,6 +173,12 @@ export const initDB = async () => {
   
   // Seed Social Links
   tx.objectStore(SETTINGS_STORE).put(initialSocialLinks, 'socialLinks');
+
+  // Seed initial visit timestamps to prevent notifications for seeded data
+  const now = Date.now();
+  tx.objectStore(USER_STATE_STORE).put(now, 'lastVisit_feed');
+  tx.objectStore(USER_STATE_STORE).put(now, 'lastVisit_meetings');
+  tx.objectStore(USER_STATE_STORE).put(now, 'lastVisit_activities');
   
   // Set the initialization flag so this logic never runs again.
   tx.objectStore(SETTINGS_STORE).put(true, 'dbInitialized');
@@ -229,4 +243,16 @@ export const getSocialLinks = async (): Promise<SocialLinks> => {
 
 export const saveSocialLinks = async (links: SocialLinks): Promise<void> => {
   await (await dbPromise).put(SETTINGS_STORE, links, 'socialLinks');
+};
+
+// User State Functions
+export const getLastVisitTimestamp = async (section: 'feed' | 'meetings' | 'activities'): Promise<number> => {
+    const db = await dbPromise;
+    const timestamp = await db.get(USER_STATE_STORE, `lastVisit_${section}`);
+    return timestamp || 0;
+};
+
+export const updateLastVisitTimestamp = async (section: 'feed' | 'meetings' | 'activities'): Promise<void> => {
+    const db = await dbPromise;
+    await db.put(USER_STATE_STORE, Date.now(), `lastVisit_${section}`);
 };
