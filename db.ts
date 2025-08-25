@@ -146,23 +146,30 @@ const dbPromise = openDB<AppDB>(DB_NAME, DB_VERSION, {
 
 export const initDB = async () => {
   const db = await dbPromise;
+  // Check for an initialization flag to ensure seeding only happens once.
+  const initialized = await db.get(SETTINGS_STORE, 'dbInitialized');
+
+  // If the flag is set, the DB has been seeded. We can exit early.
+  if (initialized) {
+    return;
+  }
+  
+  // If not initialized, start a single transaction to seed all initial data.
   const tx = db.transaction([NEWS_STORE, MEETINGS_STORE, SETTINGS_STORE], 'readwrite');
   
-  const newsCount = await tx.objectStore(NEWS_STORE).count();
-  if (newsCount === 0) {
-    initialPosts.forEach(post => tx.objectStore(NEWS_STORE).add(post));
-  }
+  // Seed News Articles
+  initialPosts.forEach(post => tx.objectStore(NEWS_STORE).add(post));
+  
+  // Seed Meetings and Activities
+  initialMeetings.forEach(meeting => tx.objectStore(MEETINGS_STORE).add(meeting));
+  
+  // Seed Social Links
+  tx.objectStore(SETTINGS_STORE).put(initialSocialLinks, 'socialLinks');
+  
+  // Set the initialization flag so this logic never runs again.
+  tx.objectStore(SETTINGS_STORE).put(true, 'dbInitialized');
 
-  const meetingsCount = await tx.objectStore(MEETINGS_STORE).count();
-  if (meetingsCount === 0) {
-    initialMeetings.forEach(meeting => tx.objectStore(MEETINGS_STORE).add(meeting));
-  }
-
-  const socialLinks = await tx.objectStore(SETTINGS_STORE).get('socialLinks');
-  if (!socialLinks) {
-    tx.objectStore(SETTINGS_STORE).put(initialSocialLinks, 'socialLinks');
-  }
-
+  // Wait for the entire transaction to complete.
   await tx.done;
 };
 
