@@ -1,5 +1,4 @@
 
-
 export enum NewsCategory {
   STATE = 'State News',
   NATIONAL = 'National News',
@@ -84,4 +83,20 @@ export interface MediaAsset {
     mimeType: string;
   };
   created_at: string;
+}
+
+export enum NotificationType {
+  NEWS = 'news',
+  MEETING = 'meeting',
+  ACTIVITY = 'activity',
+  LIVE = 'live',
+}
+
+export interface Notification {
+  id: string;
+  text: string;
+  type: NotificationType;
+  linkId: string;
+  timestamp: string;
+  read: boolean;
 }

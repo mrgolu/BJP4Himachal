@@ -2,7 +2,7 @@
 const DB_NAME = 'bjp-hp-news-portal-db';
 const DB_VERSION = 1;
 
-const STORES = ['posts', 'meetings', 'settings', 'media_assets'];
+const STORES = ['posts', 'meetings', 'settings', 'media_assets', 'notifications'];
 
 class LocalDB {
   private db: IDBDatabase | null = null;

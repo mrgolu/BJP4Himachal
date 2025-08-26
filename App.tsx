@@ -1,8 +1,8 @@
 
 
 import React, { useState, useEffect } from 'react';
-import type { NewsArticle, SocialLinks, Comment, Meeting, MediaAsset } from './types';
-import { NewsCategory, MeetingType, MediaAssetCategory } from './types';
+import type { NewsArticle, SocialLinks, Comment, Meeting, MediaAsset, Notification } from './types';
+import { NewsCategory, MeetingType, MediaAssetCategory, NotificationType } from './types';
 import Header from './components/Header';
 import NewsFeed from './components/NewsFeed';
 import NewsDetail from './components/NewsDetail';
@@ -42,6 +42,7 @@ const App: React.FC = () => {
   const [posts, setPosts] = useState<NewsArticle[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const [selectedPost, setSelectedPost] = useState<NewsArticle | null>(null);
   const [editingPost, setEditingPost] = useState<NewsArticle | null>(null);
@@ -79,21 +80,24 @@ const App: React.FC = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-        const [postsData, meetingsData, socialLinksData, mediaAssetsData] = await Promise.all([
+        const [postsData, meetingsData, socialLinksData, mediaAssetsData, notificationsData] = await Promise.all([
             db.getAll<NewsArticle>('posts'),
             db.getAll<Meeting>('meetings'),
             db.get<{key: string, value: SocialLinks}>('settings', 'socialLinks'),
             db.getAll<MediaAsset>('media_assets'),
+            db.getAll<Notification>('notifications'),
         ]);
 
         postsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         meetingsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         mediaAssetsData.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        notificationsData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         
         setPosts(postsData);
         setMeetings(meetingsData);
         setSocialLinks(socialLinksData?.value || { fb: '', insta: '', x: '' });
         setMediaAssets(mediaAssetsData);
+        setNotifications(notificationsData);
 
     } catch (error) {
         console.error("Failed to load portal data from LocalDB:", error);
@@ -128,6 +132,17 @@ const App: React.FC = () => {
             link_clicks: { fb: 0, insta: 0, x: 0 },
         };
         await db.add('posts', fullPost);
+        
+        const notification: Notification = {
+          id: uuidv4(),
+          text: `New article published: ${fullPost.title.substring(0, 50)}${fullPost.title.length > 50 ? '...' : ''}`,
+          type: NotificationType.NEWS,
+          linkId: fullPost.id,
+          timestamp: now,
+          read: false,
+        };
+        await db.add('notifications', notification);
+
         await refetchData();
         navigateToFeed();
     } catch (error) {
@@ -154,6 +169,12 @@ const App: React.FC = () => {
   const handleDeletePost = async (postId: string) => {
     try {
         await db.delete('posts', postId);
+
+        const relatedNotifications = notifications.filter(n => n.type === NotificationType.NEWS && n.linkId === postId);
+        for (const n of relatedNotifications) {
+            await db.delete('notifications', n.id);
+        }
+
         const isViewingDeletedPost = currentView === 'detail' && selectedPost?.id === postId;
         await refetchData();
         if (isViewingDeletedPost) {
@@ -266,6 +287,7 @@ const App: React.FC = () => {
     setPosts([]);
     setMeetings([]);
     setMediaAssets([]);
+    setNotifications([]);
     setCurrentView('feed');
   };
 
@@ -282,6 +304,17 @@ const App: React.FC = () => {
       const now = new Date().toISOString();
       const fullMeeting = { ...newMeetingData, id: uuidv4(), created_at: now };
       await db.add('meetings', fullMeeting);
+      
+      const notification: Notification = {
+        id: uuidv4(),
+        text: `New ${fullMeeting.type}: ${fullMeeting.title.substring(0, 50)}${fullMeeting.title.length > 50 ? '...' : ''}`,
+        type: newMeetingData.type === MeetingType.MEETING ? NotificationType.MEETING : NotificationType.ACTIVITY,
+        linkId: fullMeeting.id,
+        timestamp: now,
+        read: false,
+      };
+      await db.add('notifications', notification);
+
       await refetchData();
       setCurrentView(newMeetingData.type === MeetingType.MEETING ? 'meetings' : 'activities');
     } catch (error) {
@@ -304,6 +337,14 @@ const App: React.FC = () => {
   const handleDeleteMeeting = async (meetingId: string) => {
     try {
       await db.delete('meetings', meetingId);
+
+      const relatedNotifications = notifications.filter(
+          n => (n.type === NotificationType.MEETING || n.type === NotificationType.ACTIVITY) && n.linkId === meetingId
+      );
+      for (const n of relatedNotifications) {
+          await db.delete('notifications', n.id);
+      }
+
       await refetchData();
     } catch (error) {
         console.error("Error deleting meeting:", error);
@@ -335,9 +376,24 @@ const App: React.FC = () => {
       }
   };
   
-  const handleStartStream = (title: string) => {
-    setLiveStream({ title, comments: [] });
-    setCurrentView('live-admin');
+  const handleStartStream = async (title: string) => {
+    const now = new Date().toISOString();
+    const notification: Notification = {
+      id: uuidv4(),
+      text: `Live stream started: ${title.substring(0, 50)}${title.length > 50 ? '...' : ''}`,
+      type: NotificationType.LIVE,
+      linkId: 'live-stream',
+      timestamp: now,
+      read: false,
+    };
+    try {
+      await db.add('notifications', notification);
+      await refetchData();
+      setLiveStream({ title, comments: [] });
+      setCurrentView('live-admin');
+    } catch (error) {
+        console.error("Error creating live stream notification:", error);
+    }
   };
 
   const handleStreamEnd = () => {
@@ -359,6 +415,57 @@ const App: React.FC = () => {
       text,
     };
     setLiveStream(prev => prev ? { ...prev, comments: [...prev.comments, newComment] } : null);
+  };
+
+  const handleNotificationClick = async (notification: Notification) => {
+      if (!notification.read) {
+          const updatedNotification = { ...notification, read: true };
+          await db.put('notifications', updatedNotification);
+          setNotifications(currentNotifications => 
+              currentNotifications.map(n => n.id === notification.id ? updatedNotification : n)
+          );
+      }
+
+      switch (notification.type) {
+      case NotificationType.NEWS:
+          const post = await db.get<NewsArticle>('posts', notification.linkId);
+          if (post) {
+              handleSelectPost(post);
+          } else {
+              navigateToFeed();
+          }
+          break;
+      case NotificationType.MEETING:
+          setCurrentView('meetings');
+          break;
+      case NotificationType.ACTIVITY:
+          setCurrentView('activities');
+          break;
+      case NotificationType.LIVE:
+          if(liveStream) {
+              joinLiveStream();
+          } else {
+              navigateToFeed();
+          }
+          break;
+      default:
+          navigateToFeed();
+      }
+  };
+
+  const handleMarkAllAsRead = async () => {
+      const unreadNotifications = notifications.filter(n => !n.read);
+      if (unreadNotifications.length === 0) return;
+
+      const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
+      
+      try {
+          const promises = unreadNotifications.map(n => db.put('notifications', { ...n, read: true }));
+          await Promise.all(promises);
+          setNotifications(updatedNotifications);
+      } catch (error) {
+          console.error("Failed to mark all notifications as read:", error);
+      }
   };
   
   const renderLoadingState = () => {
@@ -467,6 +574,9 @@ const App: React.FC = () => {
         liveTitle={liveStream?.title}
         onGoLive={() => setCurrentView('live-admin')}
         onJoinLive={joinLiveStream}
+        notifications={notifications}
+        onNotificationClick={handleNotificationClick}
+        onMarkAllAsRead={handleMarkAllAsRead}
       />
       <main className="flex-grow container mx-auto p-4 md:p-8 pb-20 md:pb-8">
         {renderContent()}

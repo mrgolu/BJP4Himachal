@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { UserRole } from '../App';
+import type { Notification } from '../types';
 
 interface HeaderProps {
   onNewPostClick: () => void;
@@ -15,9 +16,66 @@ interface HeaderProps {
   liveTitle?: string;
   onGoLive: () => void;
   onJoinLive: () => void;
+  notifications: Notification[];
+  onNotificationClick: (notification: Notification) => void;
+  onMarkAllAsRead: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetingsClick, onActivitiesClick, onMediaKitClick, userRole, userName, onLogout, isLive, liveTitle, onGoLive, onJoinLive }) => {
+const timeSince = (dateString: string): string => {
+  const date = new Date(dateString);
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  
+  if (seconds < 5) return "just now";
+
+  let interval = seconds / 31536000;
+  if (interval > 1) {
+    const years = Math.floor(interval);
+    return `${years} year${years > 1 ? 's' : ''} ago`;
+  }
+  interval = seconds / 2592000;
+  if (interval > 1) {
+    const months = Math.floor(interval);
+    return `${months} month${months > 1 ? 's' : ''} ago`;
+  }
+  interval = seconds / 86400;
+  if (interval > 1) {
+    const days = Math.floor(interval);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  }
+  interval = seconds / 3600;
+  if (interval > 1) {
+    const hours = Math.floor(interval);
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  }
+  interval = seconds / 60;
+  if (interval > 1) {
+    const minutes = Math.floor(interval);
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  }
+  return Math.floor(seconds) + " seconds ago";
+};
+
+const Header: React.FC<HeaderProps> = ({ 
+  onNewPostClick, onHomeClick, onMeetingsClick, onActivitiesClick, onMediaKitClick, 
+  userRole, userName, onLogout, isLive, liveTitle, onGoLive, onJoinLive,
+  notifications, onNotificationClick, onMarkAllAsRead 
+}) => {
+  const [showNotifications, setShowNotifications] = useState(false);
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const notificationRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+            setShowNotifications(false);
+        }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <header className="bg-gradient-to-r from-bjp-orange via-bjp-white to-bjp-green shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -58,6 +116,39 @@ const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetings
             </nav>
         </div>
         <div className="flex items-center space-x-4">
+            <div className="relative" ref={notificationRef}>
+              <button
+                onClick={() => setShowNotifications(s => !s)}
+                className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                aria-label={`View notifications. ${unreadCount} unread.`}
+              >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                  {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-5 w-5 bg-red-500 text-white text-xs items-center justify-center">{unreadCount}</span>
+                      </span>
+                  )}
+              </button>
+              {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                          <h4 className="text-lg font-semibold text-gray-800">Notifications</h4>
+                          {unreadCount > 0 && <button onClick={onMarkAllAsRead} className="text-sm text-bjp-orange hover:underline">Mark all as read</button>}
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                          {notifications.length > 0 ? notifications.map(n => (
+                              <div key={n.id} onClick={() => { onNotificationClick(n); setShowNotifications(false); }} className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${!n.read ? 'bg-orange-50' : ''}`}>
+                                  <p className="text-sm text-gray-700">{n.text}</p>
+                                  <p className="text-xs text-gray-500 mt-1">{timeSince(n.timestamp)}</p>
+                              </div>
+                          )) : (
+                              <p className="text-center text-gray-500 py-8">No notifications yet.</p>
+                          )}
+                      </div>
+                  </div>
+              )}
+            </div>
             {userRole === 'admin' ? (
               <>
                  <button
