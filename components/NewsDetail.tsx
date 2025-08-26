@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { NewsArticle } from '../types';
 import type { UserRole } from '../App';
@@ -121,19 +122,19 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
   const postDate = new Date(post.date);
 
   const renderMedia = () => {
-    if (!post.featuredMedia) return null;
+    if (!post.featured_media) return null;
     
-    switch (post.featuredMedia.type) {
+    switch (post.featured_media.type) {
       case 'image':
-        return <img className="w-full h-auto max-h-[500px] object-contain bg-gray-100 rounded-lg shadow-md" src={post.featuredMedia.url} alt={post.title} />;
+        return <img className="w-full h-auto max-h-[500px] object-contain bg-gray-100 rounded-lg shadow-md" src={post.featured_media.url} alt={post.title} />;
       case 'video':
-        return <video className="w-full h-auto max-h-[500px] rounded-lg shadow-md bg-black" src={post.featuredMedia.url} controls />;
+        return <video className="w-full h-auto max-h-[500px] rounded-lg shadow-md bg-black" src={post.featured_media.url} controls />;
       case 'document':
         return (
           <div className="w-full bg-gray-100 p-8 rounded-lg shadow-md flex flex-col items-center justify-center text-center">
             <svg className="w-24 h-24 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            <p className="mt-4 text-lg font-semibold text-gray-800">{post.featuredMedia.name}</p>
-            <p className="text-sm text-gray-600">{post.featuredMedia.mimeType}</p>
+            <p className="mt-4 text-lg font-semibold text-gray-800">{post.featured_media.name}</p>
+            <p className="text-sm text-gray-600">{post.featured_media.mimeType}</p>
           </div>
         );
       default:
@@ -264,7 +265,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
                   <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-white shadow-sm">
                       <div className="flex items-center text-blue-600">
                           <FacebookIcon className="w-5 h-5 mr-2"/>
-                          <span className="font-bold text-xl text-gray-800">{post.linkClicks.fb}</span>
+                          <span className="font-bold text-xl text-gray-800">{post.link_clicks.fb}</span>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">Facebook Clicks</p>
                   </div>
@@ -273,7 +274,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
                   <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-white shadow-sm">
                       <div className="flex items-center text-pink-600">
                           <InstagramIcon className="w-5 h-5 mr-2"/>
-                          <span className="font-bold text-xl text-gray-800">{post.linkClicks.insta}</span>
+                          <span className="font-bold text-xl text-gray-800">{post.link_clicks.insta}</span>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">Instagram Clicks</p>
                   </div>
@@ -282,7 +283,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
                   <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-white shadow-sm">
                       <div className="flex items-center text-gray-800">
                           <XIcon className="w-4 h-4 mr-2"/>
-                          <span className="font-bold text-xl text-gray-800">{post.linkClicks.x}</span>
+                          <span className="font-bold text-xl text-gray-800">{post.link_clicks.x}</span>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">X Clicks</p>
                   </div>
@@ -296,10 +297,10 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
             <div className="flex items-center justify-start space-x-4 mt-4">
                 {userRole === 'admin' && (
                   <a
-                    href={post.featuredMedia.url}
-                    download={post.featuredMedia.name}
+                    href={post.featured_media.url}
+                    download={post.featured_media.name}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-bjp-green hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                    aria-label={`Download ${post.featuredMedia.name}`}
+                    aria-label={`Download ${post.featured_media.name}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />

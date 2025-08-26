@@ -1,18 +1,29 @@
 
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 
 interface SignInProps {
-  onAdminLogin: (password: string) => void;
+  onAdminLogin: (password: string) => Promise<void>;
   onGuestContinue: () => void;
   error: string | null;
 }
 
 const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error }) => {
   const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // If an error is passed down from the parent, it means login failed.
+    if (error) {
+      setIsLoggingIn(false);
+    }
+  }, [error]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAdminLogin(password);
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
+    await onAdminLogin(password);
   };
 
   return (
@@ -38,6 +49,7 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error })
               placeholder="Admin Password"
               required
               aria-describedby="password-error"
+              disabled={isLoggingIn}
             />
           </div>
 
@@ -50,9 +62,20 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error })
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-bjp-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange transition duration-300"
+              disabled={isLoggingIn}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-bjp-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange transition duration-300 disabled:bg-orange-300"
             >
-              Sign In
+              {isLoggingIn ? (
+                <>
+                    <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing In...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </div>
         </form>
@@ -71,7 +94,8 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error })
         <div>
           <button
             onClick={onGuestContinue}
-            className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-lg font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange transition duration-300"
+            disabled={isLoggingIn}
+            className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-lg font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange transition duration-300 disabled:bg-gray-100"
           >
             Continue as Guest
           </button>

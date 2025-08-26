@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import type { NewsArticle } from '../types';
 import type { UserRole } from '../App';
@@ -16,7 +17,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ post, onSelectPost, onEditPost, onD
   
   const snippet = post.content.substring(0, 100) + '...';
   const postDate = new Date(post.date);
-  const totalClicks = post.linkClicks.fb + post.linkClicks.insta + post.linkClicks.x;
+  const totalClicks = post.link_clicks.fb + post.link_clicks.insta + post.link_clicks.x;
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,13 +46,13 @@ const NewsCard: React.FC<NewsCardProps> = ({ post, onSelectPost, onEditPost, onD
 
 
   const renderMediaPreview = () => {
-    switch (post.featuredMedia.type) {
+    switch (post.featured_media.type) {
       case 'image':
-        return <img className="w-full h-48 object-contain bg-gray-100" src={post.featuredMedia.url} alt={post.title} />;
+        return <img className="w-full h-48 object-contain bg-gray-100" src={post.featured_media.url} alt={post.title} />;
       case 'video':
         return (
           <video
-            src={post.featuredMedia.url}
+            src={post.featured_media.url}
             className="w-full h-48 object-contain bg-black"
             autoPlay
             loop

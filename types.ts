@@ -1,4 +1,5 @@
 
+
 export enum NewsCategory {
   STATE = 'State News',
   NATIONAL = 'National News',
@@ -18,11 +19,11 @@ export interface NewsArticle {
   id: string;
   title: string;
   content: string;
-  featuredMedia: FeaturedMedia;
+  featured_media: FeaturedMedia;
   category: NewsCategory;
   date: string;
   views: number;
-  linkClicks: {
+  link_clicks: {
     fb: number;
     insta: number;
     x: number;
@@ -32,7 +33,7 @@ export interface NewsArticle {
     insta?: string;
     x?: string;
   };
-  createdAt: string;
+  created_at: string;
 }
 
 export interface SocialLinks {
@@ -53,7 +54,7 @@ export enum MeetingType {
 }
 
 export interface Meeting {
-  id: string;
+  id:string;
   title: string;
   type: MeetingType;
   date: string; // ISO string for date and time
@@ -61,5 +62,26 @@ export interface Meeting {
   description: string;
   link?: string;
   invited?: string[];
-  createdAt: string;
+  created_at: string;
+}
+
+export enum MediaAssetCategory {
+  LOGO = 'Logos',
+  BANNER = 'Banners',
+  LEADER_PHOTOS = 'Leader Photos',
+  EVENT_TEMPLATES = 'Event Templates',
+  GENERAL = 'General',
+}
+
+export interface MediaAsset {
+  id: string;
+  title: string;
+  description?: string;
+  category: MediaAssetCategory;
+  file: {
+    url: string;
+    name: string;
+    mimeType: string;
+  };
+  created_at: string;
 }

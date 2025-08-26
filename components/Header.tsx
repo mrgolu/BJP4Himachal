@@ -7,18 +7,16 @@ interface HeaderProps {
   onHomeClick: () => void;
   onMeetingsClick: () => void;
   onActivitiesClick: () => void;
+  onMediaKitClick: () => void;
   userRole: UserRole;
   onLogout: () => void;
   isLive: boolean;
   liveTitle?: string;
   onGoLive: () => void;
   onJoinLive: () => void;
-  hasNewPosts: boolean;
-  hasNewMeetings: boolean;
-  hasNewActivities: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetingsClick, onActivitiesClick, userRole, onLogout, isLive, liveTitle, onGoLive, onJoinLive, hasNewPosts, hasNewMeetings, hasNewActivities }) => {
+const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetingsClick, onActivitiesClick, onMediaKitClick, userRole, onLogout, isLive, liveTitle, onGoLive, onJoinLive }) => {
   return (
     <header className="bg-gradient-to-r from-bjp-orange via-bjp-white to-bjp-green shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -26,7 +24,6 @@ const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetings
             <div className="flex items-center space-x-3 cursor-pointer" onClick={onHomeClick}>
               <div className="relative">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/BJP_logo_with_circle.svg" alt="BJP Logo" className="h-12 w-12 object-contain"/>
-                {hasNewPosts && <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>}
               </div>
             <div>
                 <h1 className="text-xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
@@ -42,7 +39,6 @@ const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetings
                     aria-label="View Meetings"
                 >
                     Meetings
-                    {hasNewMeetings && <span className="absolute top-0 -right-2 block h-2 w-2 rounded-full bg-red-500"></span>}
                 </button>
                  <button
                     onClick={onActivitiesClick}
@@ -50,7 +46,13 @@ const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetings
                     aria-label="View Activities"
                 >
                     Activities
-                    {hasNewActivities && <span className="absolute top-0 -right-2 block h-2 w-2 rounded-full bg-red-500"></span>}
+                </button>
+                 <button
+                    onClick={onMediaKitClick}
+                    className="text-md font-semibold text-gray-700 hover:text-bjp-orange transition-colors relative"
+                    aria-label="View Media Kit"
+                >
+                    Media Kit
                 </button>
             </nav>
         </div>

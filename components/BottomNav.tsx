@@ -1,18 +1,16 @@
 
 import React from 'react';
 
-type View = 'feed' | 'manage' | 'detail' | 'admin' | 'live-admin' | 'live-user' | 'meetings' | 'activities' | 'manage-meeting';
+type View = 'feed' | 'manage' | 'detail' | 'admin' | 'live-admin' | 'live-user' | 'meetings' | 'activities' | 'manage-meeting' | 'media-kit';
 
 interface BottomNavProps {
   currentView: View;
   onHomeClick: () => void;
   onMeetingsClick: () => void;
   onActivitiesClick: () => void;
+  onMediaKitClick: () => void;
   onLiveClick: () => void;
   isLive: boolean;
-  hasNewPosts: boolean;
-  hasNewMeetings: boolean;
-  hasNewActivities: boolean;
 }
 
 const HomeIcon = ({ isActive }: { isActive: boolean }) => (
@@ -36,7 +34,11 @@ const ActivitiesIcon = ({ isActive }: { isActive: boolean }) => (
  <svg className={`w-6 h-6 mb-1 transition-colors ${isActive ? 'text-bjp-orange' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6H8.5l-1-1H5a2 2 0 00-2 2z"></path></svg>
 );
 
-const BottomNav: React.FC<BottomNavProps> = ({ currentView, onHomeClick, onMeetingsClick, onActivitiesClick, onLiveClick, isLive, hasNewPosts, hasNewMeetings, hasNewActivities }) => {
+const MediaKitIcon = ({ isActive }: { isActive: boolean }) => (
+    <svg className={`w-6 h-6 mb-1 transition-colors ${isActive ? 'text-bjp-orange' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+);
+
+const BottomNav: React.FC<BottomNavProps> = ({ currentView, onHomeClick, onMeetingsClick, onActivitiesClick, onMediaKitClick, onLiveClick, isLive }) => {
   const isViewActive = (view: View) => currentView === view;
 
   return (
@@ -45,27 +47,30 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, onHomeClick, onMeeti
         <button onClick={onHomeClick} className="flex flex-col items-center justify-center w-full text-xs font-medium focus:outline-none" aria-label="Home">
           <div className="relative">
             <HomeIcon isActive={isViewActive('feed')} />
-            {hasNewPosts && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>}
           </div>
           <span className={`transition-colors ${isViewActive('feed') ? 'text-bjp-orange' : 'text-gray-600'}`}>Home</span>
-        </button>
-        <button onClick={onLiveClick} className="flex flex-col items-center justify-center w-full text-xs font-medium focus:outline-none" aria-label="Live Stream" disabled={!isLive}>
-          <LiveIcon isActive={isViewActive('live-user')} isLive={isLive} />
-          <span className={`transition-colors ${isViewActive('live-user') ? 'text-bjp-orange' : 'text-gray-600'} ${!isLive ? 'text-gray-400' : ''}`}>Live</span>
         </button>
         <button onClick={onMeetingsClick} className="flex flex-col items-center justify-center w-full text-xs font-medium focus:outline-none" aria-label="Meetings">
           <div className="relative">
             <MeetingsIcon isActive={isViewActive('meetings')} />
-            {hasNewMeetings && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>}
           </div>
           <span className={`transition-colors ${isViewActive('meetings') ? 'text-bjp-orange' : 'text-gray-600'}`}>Meetings</span>
         </button>
         <button onClick={onActivitiesClick} className="flex flex-col items-center justify-center w-full text-xs font-medium focus:outline-none" aria-label="Activities">
           <div className="relative">
             <ActivitiesIcon isActive={isViewActive('activities')} />
-            {hasNewActivities && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>}
           </div>
           <span className={`transition-colors ${isViewActive('activities') ? 'text-bjp-orange' : 'text-gray-600'}`}>Activity</span>
+        </button>
+        <button onClick={onMediaKitClick} className="flex flex-col items-center justify-center w-full text-xs font-medium focus:outline-none" aria-label="Media Kit">
+          <div className="relative">
+            <MediaKitIcon isActive={isViewActive('media-kit')} />
+          </div>
+          <span className={`transition-colors ${isViewActive('media-kit') ? 'text-bjp-orange' : 'text-gray-600'}`}>Media Kit</span>
+        </button>
+        <button onClick={onLiveClick} className="flex flex-col items-center justify-center w-full text-xs font-medium focus:outline-none" aria-label="Live Stream" disabled={!isLive}>
+          <LiveIcon isActive={isViewActive('live-user')} isLive={isLive} />
+          <span className={`transition-colors ${isViewActive('live-user') ? 'text-bjp-orange' : 'text-gray-600'} ${!isLive ? 'text-gray-400' : ''}`}>Live</span>
         </button>
       </div>
     </nav>
