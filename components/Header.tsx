@@ -9,6 +9,7 @@ interface HeaderProps {
   onActivitiesClick: () => void;
   onMediaKitClick: () => void;
   userRole: UserRole;
+  userName?: string;
   onLogout: () => void;
   isLive: boolean;
   liveTitle?: string;
@@ -16,7 +17,7 @@ interface HeaderProps {
   onJoinLive: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetingsClick, onActivitiesClick, onMediaKitClick, userRole, onLogout, isLive, liveTitle, onGoLive, onJoinLive }) => {
+const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetingsClick, onActivitiesClick, onMediaKitClick, userRole, userName, onLogout, isLive, liveTitle, onGoLive, onJoinLive }) => {
   return (
     <header className="bg-gradient-to-r from-bjp-orange via-bjp-white to-bjp-green shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -89,18 +90,35 @@ const Header: React.FC<HeaderProps> = ({ onNewPostClick, onHomeClick, onMeetings
                    <span className="hidden md:inline">Sign Out</span>
                  </button>
               </>
-            ) : isLive && (
-               <button
-                  onClick={onJoinLive}
-                  className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition duration-300 ease-in-out flex items-center space-x-2 animate-pulse"
-                  aria-label="Join Live Stream"
-                >
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+            ) : (
+                <>
+                  <span className="font-semibold text-gray-700 hidden sm:inline truncate max-w-xs" title={userName}>
+                    Welcome, {userName}
                   </span>
-                  <span className="hidden md:inline">LIVE NOW</span>
-                </button>
+                  {isLive && (
+                    <button
+                        onClick={onJoinLive}
+                        className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition duration-300 ease-in-out flex items-center space-x-2 animate-pulse"
+                        aria-label="Join Live Stream"
+                      >
+                        <span className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                        </span>
+                        <span className="hidden md:inline">LIVE NOW</span>
+                      </button>
+                  )}
+                   <button
+                    onClick={onLogout}
+                    className="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 transition duration-300 ease-in-out flex items-center space-x-2"
+                    aria-label="Sign out"
+                  >
+                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V5.414l7.293 7.293a1 1 0 001.414-1.414L5.414 4H15a1 1 0 100-2H4a1 1 0 00-1 1z" clipRule="evenodd" />
+                   </svg>
+                   <span className="hidden md:inline">Sign Out</span>
+                 </button>
+                </>
             )}
         </div>
       </div>

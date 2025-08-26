@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { NewsArticle } from '../types';
 import type { UserRole } from '../App';
@@ -81,7 +82,7 @@ const FacebookIcon = ({ className = 'w-8 h-8' }: { className?: string }) => (
 
 const InstagramIcon = ({ className = 'w-8 h-8' }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-    <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.011 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.316 1.363.364 2.427.048 1.024.06 1.378.06 3.808s-.012 2.784-.06 3.808c-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.316-2.427.364-1.024.048-1.378.06-3.808.06s-2.784-.012-3.808-.06c-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.316-1.363-.364-2.427-.048-1.024-.06-1.378-.06-3.808s.012-2.784.06-3.808c.049 1.064.218 1.791.465 2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 016.345 2.525c.636-.247 1.363-.316 2.427-.364C9.79 2.01 10.145 2 12.315 2zm0 1.623c-2.387 0-2.691.01-3.633.058-1.002.045-1.504.207-1.857.344-.467.182-.86.399-1.249.787-.389.389-.605.782-.787 1.25-.137.353-.3.855-.344 1.857-.048.942-.058 1.246-.058 3.633s.01 2.691.058 3.633c.045 1.002.207 1.504.344 1.857.182.466.399.86.787 1.249.389.389.782.605 1.25.787.353.137.855.3 1.857.344.942.048 1.246.058 3.633.058s2.691-.01 3.633-.058c1.002-.045 1.504-.207 1.857-.344.467-.182.86-.399 1.249-.787.389.389.605-.782.787-1.25.137.353.3-.855-.344-1.857.048-.942.058-1.246.058-3.633s-.01-2.691-.058-3.633c-.045-1.002-.207-1.504-.344-1.857a3.27 3.27 0 00-.787-1.249 3.27 3.27 0 00-1.249-.787c-.353-.137-.855-.3-1.857-.344-.942-.048-1.246-.058-3.633-.058zM12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5zm0 5.823a2.073 2.073 0 110-4.146 2.073 2.073 0 010 4.146zM18.23 6.94a1.2 1.2 0 10-2.4 0 1.2 1.2 0 002.4 0z" clipRule="evenodd" />
+    <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.011 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.316 1.363.364 2.427.048 1.024.06 1.378.06 3.808s-.012 2.784-.06 3.808c-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.316-2.427.364-1.024.048-1.378.06-3.808.06s-2.784-.012-3.808-.06c-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.316-1.363-.364-2.427-.048-1.024-.06-1.378-.06-3.808s.012-2.784.06-3.808c.049 1.064.218 1.791.465 2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 016.345 2.525c.636-.247 1.363-.316 2.427-.364C9.79 2.01 10.145 2 12.315 2zm0 1.623c-2.387 0-2.691.01-3.633.058-1.002.045-1.504.207-1.857.344-.467.182-.86.399-1.249.787-.389.389-.605.782-.787 1.25-.137.353-.3.855-.344 1.857-.048.942-.058 1.246-.058 3.633s.01 2.691.058 3.633c.045 1.002.207 1.504.344 1.857.182.466.399.86.787 1.249.389.389.782.605 1.25.787.353.137.855.3 1.857.344.942.048 1.246.058 3.633.058s2.691-.01 3.633-.058c1.002-.045 1.504-.207 1.857-.344.467-.182.86-.399 1.249-.787.389.389.605-.782.787-1.25.137-.353.3-.855-.344-1.857.048-.942.058-1.246.058-3.633s-.01-2.691-.058-3.633c-.045-1.002-.207-1.504-.344-1.857a3.27 3.27 0 00-.787-1.249 3.27 3.27 0 00-1.249-.787c-.353-.137-.855-.3-1.857-.344-.942-.048-1.246-.058-3.633-.058zM12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5zm0 5.823a2.073 2.073 0 110-4.146 2.073 2.073 0 010 4.146zM18.23 6.94a1.2 1.2 0 10-2.4 0 1.2 1.2 0 002.4 0z" clipRule="evenodd" />
   </svg>
 );
 
@@ -295,19 +296,17 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
         <div className="mb-8">
             {renderMedia()}
             <div className="flex items-center justify-start space-x-4 mt-4">
-                {userRole === 'admin' && (
-                  <a
-                    href={post.featured_media.url}
-                    download={post.featured_media.name}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-bjp-green hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                    aria-label={`Download ${post.featured_media.name}`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                    Download
-                  </a>
-                )}
+                <a
+                  href={post.featured_media.url}
+                  download={post.featured_media.name}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-bjp-green hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  aria-label={`Download ${post.featured_media.name}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                  Download
+                </a>
                 <button
                   onClick={handleShare}
                   className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange"

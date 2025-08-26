@@ -44,7 +44,7 @@ export interface SocialLinks {
 
 export interface Comment {
   id: number;
-  user: 'Admin' | 'Guest';
+  user: string;
   text: string;
 }
 

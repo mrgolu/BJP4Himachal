@@ -4,13 +4,15 @@ import React, { useState, useEffect } from 'react';
 
 interface SignInProps {
   onAdminLogin: (password: string) => Promise<void>;
-  onGuestContinue: () => void;
+  onUserSignIn: (name: string) => void;
   error: string | null;
 }
 
-const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error }) => {
+const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onUserSignIn, error }) => {
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isGuestLoggingIn, setIsGuestLoggingIn] = useState(false);
 
   useEffect(() => {
     // If an error is passed down from the parent, it means login failed.
@@ -19,11 +21,18 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error })
     }
   }, [error]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoggingIn) return;
+    if (isLoggingIn || isGuestLoggingIn) return;
     setIsLoggingIn(true);
     await onAdminLogin(password);
+  };
+
+  const handleUserSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoggingIn || isGuestLoggingIn || !name.trim()) return;
+    setIsGuestLoggingIn(true);
+    onUserSignIn(name);
   };
 
   return (
@@ -37,7 +46,7 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error })
           <p className="text-md text-gray-600 font-semibold">News Portal</p>
         </div>
         
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6" onSubmit={handleAdminSubmit}>
           <div>
             <label htmlFor="password-input" className="sr-only">Password</label>
             <input
@@ -49,7 +58,7 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error })
               placeholder="Admin Password"
               required
               aria-describedby="password-error"
-              disabled={isLoggingIn}
+              disabled={isLoggingIn || isGuestLoggingIn}
             />
           </div>
 
@@ -62,7 +71,7 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error })
           <div>
             <button
               type="submit"
-              disabled={isLoggingIn}
+              disabled={isLoggingIn || isGuestLoggingIn}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-bjp-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange transition duration-300 disabled:bg-orange-300"
             >
               {isLoggingIn ? (
@@ -74,7 +83,7 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error })
                     Signing In...
                 </>
               ) : (
-                'Sign In'
+                'Admin Sign In'
               )}
             </button>
           </div>
@@ -91,15 +100,30 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onGuestContinue, error })
           </div>
         </div>
 
-        <div>
-          <button
-            onClick={onGuestContinue}
-            disabled={isLoggingIn}
-            className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-lg font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange transition duration-300 disabled:bg-gray-100"
-          >
-            Continue as Guest
-          </button>
-        </div>
+        <form className="space-y-4" onSubmit={handleUserSubmit}>
+           <div>
+            <label htmlFor="name-input" className="sr-only">Your Name</label>
+            <input
+              id="name-input"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-bjp-orange focus:border-transparent"
+              placeholder="Enter your name to continue"
+              required
+              disabled={isLoggingIn || isGuestLoggingIn}
+            />
+          </div>
+          <div>
+            <button
+              type="submit"
+              disabled={isLoggingIn || isGuestLoggingIn || !name.trim()}
+              className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-lg font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange transition duration-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              {isGuestLoggingIn ? 'Entering...' : 'Enter as User'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
