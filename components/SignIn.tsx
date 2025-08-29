@@ -1,38 +1,64 @@
 
-
 import React, { useState, useEffect } from 'react';
 
 interface SignInProps {
-  onAdminLogin: (password: string) => Promise<void>;
-  onUserSignIn: (name: string) => void;
+  onAdminLogin: (email: string, password: string) => Promise<void>;
+  onUserSignIn: (name: string) => Promise<void>;
   error: string | null;
+  onResendConfirmation: (email: string) => Promise<string>;
 }
 
-const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onUserSignIn, error }) => {
+const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onUserSignIn, error, onResendConfirmation }) => {
+  const [email, setEmail] = useState('kartikthakur937@gmail.com');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isGuestLoggingIn, setIsGuestLoggingIn] = useState(false);
+  
+  const [showResendLink, setShowResendLink] = useState(false);
+  const [resendStatusMessage, setResendStatusMessage] = useState('');
+  const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     // If an error is passed down from the parent, it means login failed.
     if (error) {
       setIsLoggingIn(false);
+      setIsGuestLoggingIn(false);
+      if (error.toLowerCase().includes('email not confirmed')) {
+        setShowResendLink(true);
+      } else {
+        setShowResendLink(false);
+      }
+    } else {
+       setShowResendLink(false);
     }
+    // Clear previous login attempts' resend message
+    setResendStatusMessage('');
   }, [error]);
 
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoggingIn || isGuestLoggingIn) return;
     setIsLoggingIn(true);
-    await onAdminLogin(password);
+    await onAdminLogin(email, password);
+  };
+  
+  const handleResendClick = async () => {
+      if (!email) {
+          setResendStatusMessage('Please enter the admin email address above first.');
+          return;
+      }
+      setIsResending(true);
+      const message = await onResendConfirmation(email);
+      setResendStatusMessage(message);
+      setIsResending(false);
   };
 
-  const handleUserSubmit = (e: React.FormEvent) => {
+  const handleUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoggingIn || isGuestLoggingIn || !name.trim()) return;
     setIsGuestLoggingIn(true);
-    onUserSignIn(name);
+    await onUserSignIn(name);
   };
 
   return (
@@ -46,7 +72,21 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onUserSignIn, error }) =>
           <p className="text-md text-gray-600 font-semibold">News Portal</p>
         </div>
         
-        <form className="space-y-6" onSubmit={handleAdminSubmit}>
+        <form className="space-y-4" onSubmit={handleAdminSubmit}>
+           <div>
+            <label htmlFor="email-input" className="sr-only">Email</label>
+            <input
+              id="email-input"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-bjp-orange focus:border-transparent bg-gray-100"
+              placeholder="Admin Email"
+              required
+              aria-describedby="password-error"
+              disabled={true}
+            />
+          </div>
           <div>
             <label htmlFor="password-input" className="sr-only">Password</label>
             <input
@@ -66,6 +106,20 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onUserSignIn, error }) =>
             <p id="password-error" className="text-sm text-red-600 text-center" role="alert">
               {error}
             </p>
+          )}
+
+          {showResendLink && (
+            <div className="text-center text-sm space-y-2">
+                <button
+                    type="button"
+                    onClick={handleResendClick}
+                    disabled={isResending}
+                    className="font-medium text-bjp-orange hover:text-orange-700 focus:outline-none disabled:text-gray-500"
+                >
+                    {isResending ? 'Sending...' : 'Resend confirmation email'}
+                </button>
+                {resendStatusMessage && <p className="text-gray-600">{resendStatusMessage}</p>}
+            </div>
           )}
 
           <div>
@@ -120,7 +174,15 @@ const SignIn: React.FC<SignInProps> = ({ onAdminLogin, onUserSignIn, error }) =>
               disabled={isLoggingIn || isGuestLoggingIn || !name.trim()}
               className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-lg font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange transition duration-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
-              {isGuestLoggingIn ? 'Entering...' : 'Enter as User'}
+              {isGuestLoggingIn ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Entering...
+                </>
+              ) : 'Enter as User'}
             </button>
           </div>
         </form>

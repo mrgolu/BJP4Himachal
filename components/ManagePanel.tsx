@@ -1,13 +1,11 @@
 
-
-
 import React, { useState, useEffect } from 'react';
 import type { NewsArticle, FeaturedMedia } from '../types';
 import { NewsCategory } from '../types';
 import { GoogleGenAI } from '@google/genai';
 
 interface ManagePanelProps {
-  onCreatePost: (post: Omit<NewsArticle, 'id' | 'date' | 'views' | 'link_clicks' | 'created_at'>) => Promise<void>;
+  onCreatePost: (post: Omit<NewsArticle, 'id' | 'date' | 'views' | 'link_clicks' | 'created_at' | 'user_id'>) => Promise<void>;
   onUpdatePost: (post: NewsArticle) => Promise<void>;
   postToEdit?: NewsArticle | null;
   onCancel: () => void;
@@ -122,13 +120,14 @@ const ManagePanel: React.FC<ManagePanelProps> = ({ onCreatePost, onUpdatePost, p
         await onUpdatePost({
           ...postData,
           id: postToEdit.id,
+          user_id: postToEdit.user_id,
           date: postToEdit.date,
           created_at: postToEdit.created_at,
           views: originalAnalytics.views,
           link_clicks: originalAnalytics.link_clicks
         });
       } else {
-        await onCreatePost(postData as Omit<NewsArticle, 'id' | 'date' | 'views' | 'link_clicks' | 'created_at'>);
+        await onCreatePost(postData);
       }
     } catch (error) {
       console.error("Post submission failed:", error);

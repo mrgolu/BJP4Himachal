@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Comment } from '../types';
+import type { LiveStreamComment } from '../types';
 
 interface LiveStreamAdminProps {
   onStreamStart: (title: string) => void;
   onStreamEnd: () => void;
-  comments: Comment[];
+  comments: LiveStreamComment[];
 }
 
 const LiveStreamAdmin: React.FC<LiveStreamAdminProps> = ({ onStreamStart, onStreamEnd, comments }) => {

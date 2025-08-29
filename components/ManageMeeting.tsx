@@ -1,12 +1,10 @@
 
-
-
 import React, { useState, useEffect } from 'react';
 import type { Meeting } from '../types';
 import { MeetingType } from '../types';
 
 interface ManageMeetingProps {
-  onCreate: (meeting: Omit<Meeting, 'id' | 'created_at'>) => Promise<void>;
+  onCreate: (meeting: Omit<Meeting, 'id' | 'created_at' | 'user_id'>) => Promise<void>;
   onUpdate: (meeting: Meeting) => Promise<void>;
   meetingToEdit: Meeting | null;
   newMeetingType: MeetingType;
@@ -62,9 +60,9 @@ const ManageMeeting: React.FC<ManageMeetingProps> = ({ onCreate, onUpdate, meeti
     
     try {
         if (isEditMode && meetingToEdit) {
-            await onUpdate({ ...meetingData, id: meetingToEdit.id, created_at: meetingToEdit.created_at });
+            await onUpdate({ ...meetingData, id: meetingToEdit.id, user_id: meetingToEdit.user_id, created_at: meetingToEdit.created_at });
         } else {
-            await onCreate(meetingData as Omit<Meeting, 'id' | 'created_at'>);
+            await onCreate(meetingData);
         }
     } catch (error) {
         console.error("Failed to save event:", error);

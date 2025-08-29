@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Comment } from '../types';
+import type { LiveStreamComment } from '../types';
 
 interface LiveStreamUserProps {
   title: string;
-  comments: Comment[];
+  comments: LiveStreamComment[];
   onAddComment: (text: string) => void;
   onBack: () => void;
 }

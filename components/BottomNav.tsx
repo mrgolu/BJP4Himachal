@@ -1,5 +1,5 @@
-
 import React from 'react';
+import type { UserRole } from '../App';
 
 type View = 'feed' | 'manage' | 'detail' | 'admin' | 'live-admin' | 'live-user' | 'meetings' | 'activities' | 'manage-meeting' | 'media-kit';
 
@@ -11,6 +11,7 @@ interface BottomNavProps {
   onMediaKitClick: () => void;
   onLiveClick: () => void;
   isLive: boolean;
+  userRole: UserRole;
 }
 
 const HomeIcon = ({ isActive }: { isActive: boolean }) => (
@@ -38,8 +39,11 @@ const MediaKitIcon = ({ isActive }: { isActive: boolean }) => (
     <svg className={`w-6 h-6 mb-1 transition-colors ${isActive ? 'text-bjp-orange' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
 );
 
-const BottomNav: React.FC<BottomNavProps> = ({ currentView, onHomeClick, onMeetingsClick, onActivitiesClick, onMediaKitClick, onLiveClick, isLive }) => {
+const BottomNav: React.FC<BottomNavProps> = ({ currentView, onHomeClick, onMeetingsClick, onActivitiesClick, onMediaKitClick, onLiveClick, isLive, userRole }) => {
   const isViewActive = (view: View) => currentView === view;
+
+  const isLiveActive = isViewActive('live-user') || isViewActive('live-admin');
+  const isLiveDisabled = userRole === 'user' && !isLive;
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-t-lg z-50">
@@ -68,9 +72,9 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, onHomeClick, onMeeti
           </div>
           <span className={`transition-colors ${isViewActive('media-kit') ? 'text-bjp-orange' : 'text-gray-600'}`}>Media Kit</span>
         </button>
-        <button onClick={onLiveClick} className="flex flex-col items-center justify-center w-full text-xs font-medium focus:outline-none" aria-label="Live Stream" disabled={!isLive}>
-          <LiveIcon isActive={isViewActive('live-user')} isLive={isLive} />
-          <span className={`transition-colors ${isViewActive('live-user') ? 'text-bjp-orange' : 'text-gray-600'} ${!isLive ? 'text-gray-400' : ''}`}>Live</span>
+        <button onClick={onLiveClick} className="flex flex-col items-center justify-center w-full text-xs font-medium focus:outline-none" aria-label="Live Stream" disabled={isLiveDisabled}>
+          <LiveIcon isActive={isLiveActive} isLive={isLive} />
+          <span className={`transition-colors ${isLiveDisabled ? 'text-gray-400' : isLiveActive ? 'text-bjp-orange' : 'text-gray-600'}`}>Live</span>
         </button>
       </div>
     </nav>

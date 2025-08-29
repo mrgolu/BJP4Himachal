@@ -16,6 +16,7 @@ export interface FeaturedMedia {
 
 export interface NewsArticle {
   id: string;
+  user_id?: string;
   title: string;
   content: string;
   featured_media: FeaturedMedia;
@@ -41,10 +42,20 @@ export interface SocialLinks {
   x: string;
 }
 
-export interface Comment {
+// Renamed from Comment to distinguish from article comments
+export interface LiveStreamComment {
   id: number;
   user: string;
   text: string;
+}
+
+// New type for article comments
+export interface Comment {
+  id: string;
+  article_id: string;
+  user: string;
+  text: string;
+  created_at: string;
 }
 
 export enum MeetingType {
@@ -54,6 +65,7 @@ export enum MeetingType {
 
 export interface Meeting {
   id:string;
+  user_id?: string;
   title: string;
   type: MeetingType;
   date: string; // ISO string for date and time
@@ -74,6 +86,7 @@ export enum MediaAssetCategory {
 
 export interface MediaAsset {
   id: string;
+  user_id?: string;
   title: string;
   description?: string;
   category: MediaAssetCategory;
@@ -99,4 +112,10 @@ export interface Notification {
   linkId: string;
   timestamp: string;
   read: boolean;
+}
+
+export interface User {
+  id: string; // Using name as the ID
+  name: string;
+  isBlocked: boolean;
 }

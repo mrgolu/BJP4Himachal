@@ -1,7 +1,8 @@
 
 
+
 import React, { useState, useRef, useEffect } from 'react';
-import type { NewsArticle } from '../types';
+import type { NewsArticle, Comment } from '../types';
 import type { UserRole } from '../App';
 
 // A simple, non-blocking toast notification
@@ -72,7 +73,44 @@ interface NewsDetailProps {
   onDelete: (postId: string) => void;
   onLinkClick: (postId: string, platform: 'fb' | 'insta' | 'x') => void;
   userRole: UserRole;
+  comments: Comment[];
+  onAddComment: (articleId: string, text: string) => Promise<void>;
+  onDeleteComment: (commentId: string) => Promise<void>;
 }
+
+const timeSince = (dateString: string): string => {
+  const date = new Date(dateString);
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  
+  if (seconds < 5) return "just now";
+
+  let interval = seconds / 31536000;
+  if (interval > 1) {
+    const years = Math.floor(interval);
+    return `${years} year${years > 1 ? 's' : ''} ago`;
+  }
+  interval = seconds / 2592000;
+  if (interval > 1) {
+    const months = Math.floor(interval);
+    return `${months} month${months > 1 ? 's' : ''} ago`;
+  }
+  interval = seconds / 86400;
+  if (interval > 1) {
+    const days = Math.floor(interval);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  }
+  interval = seconds / 3600;
+  if (interval > 1) {
+    const hours = Math.floor(interval);
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  }
+  interval = seconds / 60;
+  if (interval > 1) {
+    const minutes = Math.floor(interval);
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  }
+  return Math.floor(seconds) + " seconds ago";
+};
 
 const FacebookIcon = ({ className = 'w-8 h-8' }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -93,9 +131,11 @@ const XIcon = ({ className = 'w-7 h-7' }: { className?: string }) => (
 );
 
 
-const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete, onLinkClick, userRole }) => {
+const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete, onLinkClick, userRole, comments, onAddComment, onDeleteComment }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const confirmDeleteTimeoutRef = useRef<number | null>(null);
+  const [commentText, setCommentText] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -192,6 +232,20 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
       } finally {
         document.body.removeChild(textArea);
       }
+    }
+  };
+
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    setIsSubmittingComment(true);
+    try {
+        await onAddComment(post.id, commentText);
+        setCommentText('');
+    } catch (error) {
+        showToast('Failed to post comment. Please try again.');
+    } finally {
+        setIsSubmittingComment(false);
     }
   };
 
@@ -349,6 +403,68 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ post, onBack, onEdit, onDelete,
               </div>
             </div>
           )}
+        </div>
+        
+        {/* Comments Section */}
+        <div className="mt-12 pt-8 border-t border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Comments ({comments.length})</h2>
+            
+            <div className="bg-gray-50 p-4 rounded-lg mb-8 border border-gray-200">
+                <form onSubmit={handleCommentSubmit}>
+                    <label htmlFor="comment-text" className="block text-sm font-medium text-gray-700 mb-1">Leave a comment</label>
+                    <textarea 
+                        id="comment-text" 
+                        rows={3}
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        placeholder="Share your thoughts..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-bjp-orange focus:border-bjp-orange"
+                        disabled={isSubmittingComment}
+                        required
+                    />
+                    <div className="flex justify-end mt-2">
+                        <button 
+                            type="submit"
+                            disabled={isSubmittingComment || !commentText.trim()}
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-bjp-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bjp-orange disabled:bg-orange-300"
+                        >
+                            {isSubmittingComment ? 'Posting...' : 'Post Comment'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div className="space-y-6">
+                {comments.length > 0 ? (
+                    comments.map(comment => (
+                        <div key={comment.id} className="flex space-x-4">
+                            <div className="flex-shrink-0">
+                                <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-bjp-green">
+                                <span className="font-medium text-white text-lg">{comment.user.charAt(0).toUpperCase()}</span>
+                                </span>
+                            </div>
+                            <div className="flex-grow">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <span className="font-semibold text-gray-800">{comment.user}</span>
+                                        <span className="text-xs text-gray-500 ml-2">{timeSince(comment.created_at)}</span>
+                                    </div>
+                                    {userRole === 'admin' && (
+                                        <button onClick={() => onDeleteComment(comment.id)} className="p-1 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-100 transition-colors" aria-label="Delete comment">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </div>
+                                <p className="text-gray-700 mt-1 whitespace-pre-wrap">{comment.text}</p>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-gray-500 text-center py-4">Be the first to comment.</p>
+                )}
+            </div>
         </div>
       </article>
     </div>

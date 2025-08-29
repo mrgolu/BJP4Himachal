@@ -1,113 +1,16 @@
+import { createClient } from '@supabase/supabase-js';
 
-const DB_NAME = 'bjp-hp-news-portal-db';
-const DB_VERSION = 1;
+const supabaseUrl = 'https://pprdhurcpoddngkmpywd.supabase.co';
+// This is the public anonymous key. It is safe to be exposed in a browser.
+// Row Level Security (RLS) should be enabled in your Supabase project to secure your data.
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwcmRodXJjcG9kZG5na21weXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NDY5NTIsImV4cCI6MjA3MTUyMjk1Mn0.Uk-i8g_nnOuHYH7iL9Yti6hrxHnu1QqDGReNi12dTqA';
 
-const STORES = ['posts', 'meetings', 'settings', 'media_assets', 'notifications'];
-
-class LocalDB {
-  private db: IDBDatabase | null = null;
-  private initPromise: Promise<void> | null = null;
-
-  constructor() {
-    this.initPromise = this.init();
-  }
-
-  private async init(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.db) {
-        return resolve();
-      }
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        STORES.forEach(storeName => {
-          if (!db.objectStoreNames.contains(storeName)) {
-            const keyPath = storeName === 'settings' ? { keyPath: 'key' } : { keyPath: 'id' };
-            db.createObjectStore(storeName, keyPath);
-          }
-        });
-      };
-
-      request.onsuccess = (event) => {
-        this.db = (event.target as IDBOpenDBRequest).result;
-        resolve();
-      };
-
-      request.onerror = (event) => {
-        console.error("IndexedDB error:", (event.target as IDBOpenDBRequest).error);
-        reject((event.target as IDBOpenDBRequest).error);
-      };
-    });
-  }
-  
-  private async getDB(): Promise<IDBDatabase> {
-      await this.initPromise;
-      return this.db!;
-  }
-
-  public async add<T>(storeName: string, item: T): Promise<void> {
-    const db = await this.getDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(storeName, 'readwrite');
-      const store = transaction.objectStore(storeName);
-      const request = store.add(item);
-      transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error);
-    });
-  }
-
-  public async put<T>(storeName: string, item: T): Promise<void> {
-    const db = await this.getDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(storeName, 'readwrite');
-      const store = transaction.objectStore(storeName);
-      store.put(item);
-      transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error);
-    });
-  }
-  
-  public async get<T>(storeName: string, key: string): Promise<T | undefined> {
-    const db = await this.getDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(storeName, 'readonly');
-      const store = transaction.objectStore(storeName);
-      const request = store.get(key);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  public async getAll<T>(storeName: string): Promise<T[]> {
-    const db = await this.getDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(storeName, 'readonly');
-      const store = transaction.objectStore(storeName);
-      const request = store.getAll();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  public async delete(storeName: string, key: string): Promise<void> {
-    const db = await this.getDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(storeName, 'readwrite');
-      const store = transaction.objectStore(storeName);
-      store.delete(key);
-      transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error);
-    });
-  }
-}
-
-const db = new LocalDB();
-export default db;
+// Create a single supabase client for interacting with your database
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 
-// Helper to convert data URL to file object, useful for handling file inputs.
-export const dataURLtoFile = (dataurl: string, filename: string) => {
+// Helper to convert data URL to file object, useful for handling file uploads to Supabase Storage.
+export const dataURLtoFile = (dataurl: string, filename: string): File => {
     const arr = dataurl.split(',');
     const mimeMatch = arr[0].match(/:(.*?);/);
     if (!mimeMatch) {

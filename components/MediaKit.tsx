@@ -1,13 +1,11 @@
 
-
-
 import React, { useState, useMemo } from 'react';
 import type { MediaAsset } from '../types';
 import { MediaAssetCategory } from '../types';
 import type { UserRole } from '../App';
 
 interface UploadAssetFormProps {
-    onUpload: (asset: Omit<MediaAsset, 'id' | 'created_at'>) => Promise<void>;
+    onUpload: (asset: Omit<MediaAsset, 'id' | 'created_at' | 'user_id'>) => Promise<void>;
     onCancel: () => void;
 }
 
@@ -51,7 +49,7 @@ const UploadAssetForm: React.FC<UploadAssetFormProps> = ({ onUpload, onCancel })
                         mimeType: file.type,
                     },
                 };
-                await onUpload(assetData as Omit<MediaAsset, 'id' | 'created_at'>);
+                await onUpload(assetData);
             } catch (uploadError) {
                 console.error("Upload failed", uploadError);
                 setError("An error occurred during upload. Please try again.");
@@ -165,7 +163,7 @@ const MediaAssetCard: React.FC<MediaAssetCardProps> = ({ asset, userRole, onDele
 interface MediaKitProps {
     assets: MediaAsset[];
     userRole: UserRole;
-    onUpload: (asset: Omit<MediaAsset, 'id' | 'created_at'>) => Promise<void>;
+    onUpload: (asset: Omit<MediaAsset, 'id' | 'created_at' | 'user_id'>) => Promise<void>;
     onDelete: (id: string) => void;
 }
 
@@ -178,7 +176,7 @@ const MediaKit: React.FC<MediaKitProps> = ({ assets, userRole, onUpload, onDelet
         return assets.filter(asset => asset.category === activeFilter);
     }, [assets, activeFilter]);
 
-    const handleUploadSuccess = async (asset: Omit<MediaAsset, 'id' | 'created_at'>) => {
+    const handleUploadSuccess = async (asset: Omit<MediaAsset, 'id' | 'created_at' | 'user_id'>) => {
         await onUpload(asset);
         setShowUploadForm(false);
     };
